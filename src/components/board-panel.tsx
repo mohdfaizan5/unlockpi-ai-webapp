@@ -112,6 +112,34 @@ function MermaidDiagram({ chart }: { chart: string }) {
             // Final trim
             trimmedChart = trimmedChart.trim();
 
+            // Handle Unicode escape sequences by converting them to actual characters
+            // This fixes issues with \u00a0 (non-breaking space), \u2260 (≠), etc.
+            trimmedChart = trimmedChart.replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => {
+                return String.fromCharCode(parseInt(hex, 16));
+            });
+
+            // Replace problematic Unicode characters that Mermaid doesn't handle well
+            // Convert non-breaking spaces to regular spaces
+            trimmedChart = trimmedChart.replace(/\u00a0/g, " ");
+            // Handle common math symbols that might cause issues - escape them or replace
+            trimmedChart = trimmedChart.replace(/≠/g, "!=");
+
+            // Auto-escape labels with special characters in Mermaid node definitions
+            // Convert: A[Label (with parens)] → A["Label (with parens)"]
+            // Only if label contains special chars and isn't already quoted
+            trimmedChart = trimmedChart.replace(
+                /([A-Za-z0-9_]+)\[([^\]"]+)\]/g,
+                (match, nodeId, label) => {
+                    // Check if label contains special characters that need quoting
+                    if (/[()[\]{}]/.test(label)) {
+                        // Escape any existing quotes in the label
+                        const escapedLabel = label.replace(/"/g, '\\"');
+                        return `${nodeId}["${escapedLabel}"]`;
+                    }
+                    return match; // Return unchanged if no special chars
+                }
+            );
+
             if (!trimmedChart) {
                 if (!cancelled) setError("Empty diagram code.");
                 return;
@@ -136,7 +164,7 @@ function MermaidDiagram({ chart }: { chart: string }) {
                         lineColor: "#666666",
                         secondaryColor: "#0364CE",
                         tertiaryColor: "#333333",
-                        fontSize: "16px",
+                        fontSize: "22px",
                     },
                     flowchart: {
                         htmlLabels: true,

@@ -133,6 +133,7 @@ export function TalkVisualizer({
                     className="w-full max-w-5xl "
                 />
             )}
+
         </div>
     );
 }
