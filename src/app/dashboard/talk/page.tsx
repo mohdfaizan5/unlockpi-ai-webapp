@@ -1,5 +1,10 @@
 /**
  * /talk route — Voice-only interface for talking to the UnlockPi AI agent.
+ *
+ * Layout (when connected):
+ *   The LiveKitRoom fills the full viewport height.
+ *   TalkVisualizer gets flex-1, giving it all remaining space after TalkBackground.
+ *   Inside TalkVisualizer: compact header bar + full-height board + transcript overlay.
  */
 "use client";
 
@@ -9,7 +14,6 @@ import {
     StartAudio,
     useVoiceAssistant,
     useLocalParticipant,
-    VoiceAssistantControlBar,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { Track } from "livekit-client";
@@ -81,25 +85,36 @@ function ActiveRoom({ connect, isConnecting, isConnected, error }: ActiveRoomPro
     const isLive = isConnected && state !== "disconnected" && state !== "connecting";
 
     return (
+        // h-full so the inner flex column can stretch to 100vh from LivKitRoom
         <div className={cn(
-            "flex flex-col items-center h-full gap-6 px-6 py-6 relative overflow-hidden transition-all duration-500",
-            // Center content vertically if not connected, otherwise start from top
-            !isConnected ? "justify-center" : "justify-start"
+            "flex flex-col h-full relative overflow-hidden transition-all duration-500",
+            // Center content vertically only on the pre-connection screen
+            !isConnected ? "items-center justify-center px-6 py-6 gap-6" : "items-stretch gap-0"
         )}>
             <TalkBackground state={state} />
 
+            {/* TalkVisualizer grows to fill all remaining height when connected */}
             <TalkVisualizer
                 state={state}
                 isLive={isLive}
+                isConnected={isConnected}
                 audioTrack={audioTrack}
                 micTrackRef={micTrackRef}
                 liveAgentText={liveAgentText}
                 boardText={boardText}
                 boardHighlights={boardHighlights}
+                onDisconnect={() => window.location.reload()}
+                // Pass transcript as a slot so it renders overlaid on the board
+                transcriptSlot={isLive ? (
+                    <TalkTranscript
+                        transcriptLog={transcriptLog}
+                        liveAgentText={liveAgentText}
+                        liveUserText={liveUserText}
+                    />
+                ) : undefined}
             />
 
             {/* ── Connect button (shown when not connected) ── */}
-            {/* Wrapped in a div to ensure proper spacing/positioning relative to centered visualizer */}
             {!isConnected && (
                 <div className="mt-8">
                     <ConnectionScreen
@@ -107,28 +122,6 @@ function ActiveRoom({ connect, isConnecting, isConnected, error }: ActiveRoomPro
                         isConnecting={isConnecting}
                         error={error}
                     />
-                </div>
-            )}
-
-            {/* ── Transcript (Bottom Fixed) ── */}
-            {isLive && (
-                <TalkTranscript
-                    transcriptLog={transcriptLog}
-                    liveAgentText={liveAgentText}
-                    liveUserText={liveUserText}
-                />
-            )}
-
-            {/* ── Controls (only when connected) ── */}
-            {isConnected && (
-                <div className="flex flex-col items-center gap-2 relative z-10 flex-shrink-0 mt-4">
-                    <VoiceAssistantControlBar controls={{ leave: false }} />
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="text-xs text-[var(--color-gray)] hover:text-white underline decoration-dotted transition-colors"
-                    >
-                        Disconnect & Exit
-                    </button>
                 </div>
             )}
         </div>

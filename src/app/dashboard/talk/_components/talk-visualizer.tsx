@@ -1,29 +1,44 @@
 "use client";
 
-import { motion } from "motion/react";
+/**
+ * TalkVisualizer — two-mode layout:
+ *
+ * NOT connected: Original centered hero (logo + matrix side-by-side).
+ * CONNECTED:     Compact header row (logo | matrix | controls, justify-center)
+ *                + full-height board panel filling remaining screen space.
+ *                The transcript floats as a centered overlay at the board bottom.
+ */
+
 import { Matrix, pulse } from "@/components/ui/matrix";
 import { BoardPanel } from "@/components/board-panel";
 import { useAudioAnalyzer } from "@/hooks/use-audio-analyzer";
-import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { TrackReferenceOrPlaceholder, VoiceAssistantControlBar } from "@livekit/components-react";
 
 interface TalkVisualizerProps {
     state: string;
     isLive: boolean;
+    isConnected: boolean;
     audioTrack?: TrackReferenceOrPlaceholder;
     micTrackRef?: TrackReferenceOrPlaceholder;
     liveAgentText: string | null;
     boardText: string;
     boardHighlights: any[];
+    onDisconnect: () => void;
+    /** Transcript node rendered as a centered overlay at the bottom of the board */
+    transcriptSlot?: React.ReactNode;
 }
 
 export function TalkVisualizer({
     state,
     isLive,
+    isConnected,
     audioTrack,
     micTrackRef,
     liveAgentText,
     boardText,
     boardHighlights,
+    onDisconnect,
+    transcriptSlot,
 }: TalkVisualizerProps) {
     // ── Audio analysis for VU matrix ─────────────────────────────────────
     const agentLevels = useAudioAnalyzer(audioTrack, 64);
@@ -33,8 +48,8 @@ export function TalkVisualizer({
     const isListening = state === "listening" || state === "idle";
     const isThinking = state === "thinking";
 
-    // VU levels for the dotted bar matrix (same beeping effect as before)
-    // User speaking -> Reverse levels so it flows from Right to Left
+    // VU levels for the dotted bar matrix
+    // User speaking → reverse so it flows from Right to Left
     const activeLevels =
         isAgentSpeaking ? agentLevels.slice(0, 28) :
             isListening ? micLevels.slice(0, 28).reverse() :
@@ -50,94 +65,129 @@ export function TalkVisualizer({
         speaking: "Speaking...",
     };
 
-    return (
-        <div className="flex flex-col items-center justify-center w-full max-w-7xl gap-8 relative z-10 min-h-0">
+    // ── Shared sub-elements (used in both layouts) ────────────────────────
 
-
-            <section className="flex flex-row-reverse items-center gap-10">
-                {/* ── Matrix Visualizer ── */}
-                <div className="relative group flex-shrink-0">
-                    {/* Glow effect behind matrix */}
-                    <div
-                        className="absolute -inset-4 bg-gradient-to-r from-[var(--color-orange)]/10 to-transparent blur-xl rounded-full transition-opacity duration-700 pointer-events-none"
-                        style={{ opacity: isAgentSpeaking ? 0.6 : isThinking ? 0.4 : isListening ? 0.3 : 0.15 }}
-                    />
-
-                    <div className="relative rounded-2xl bg-[var(--color-darkest-gray)]/50 border border-[var(--color-darker-gray)] backdrop-blur-sm shadow-2xl shadow-black/50 transition-all duration-500">
-                        <Matrix
-                            rows={15}
-                            cols={28}
-                            size={6}
-                            gap={3}
-                            {...(isLive
-                                ? isThinking
-                                    // Thinking → animated pulse pattern
-                                    ? { frames: pulse, fps: 12, loop: true }
-                                    // Speaking/Listening → VU dotted bar equalizer
-                                    : { mode: "vu" as const, levels: activeLevels }
-                                // Disconnected → hero neural pulse (same as homepage)
-                                : { frames: heroFrames, fps: 30, loop: true })}
-                            palette={{
-                                on: "var(--color-orange)",
-                                off: "var(--color-dark-gray)",
-                            }}
-                            className="opacity-90"
-                            ariaLabel="Voice Visualizer"
-                        />
-                    </div>
-                </div>
-                {/* ── Top: Logo + Status ── */}
-                <div className="flex flex-col items-center gap-1 relative z-10 flex-shrink-0">
-                    <div className="relative">
-                        {/* Glow behind logo when AI speaking */}
-                        <div
-                            className="absolute -inset-4 bg-[var(--color-orange)]/20 blur-xl rounded-full transition-all duration-500 pointer-events-none"
-                            style={{
-                                opacity: isAgentSpeaking ? 1 : 0,
-                                transform: isAgentSpeaking ? "scale(1)" : "scale(0.5)",
-                            }}
-                        />
-                        <img
-                            src="/unlockpi-logo.png"
-                            alt="UnlockPi Logo"
-                            className="h-14 w-auto object-contain relative z-10 drop-shadow-2xl"
-                        />
-                    </div>
-                    <h2 className="text-white text-xl font-bold tracking-tight">UnlockPi</h2>
-                    <p className="text-[var(--color-gray)] text-xs tracking-wider flex items-center gap-1.5">
-                        <span
-                            className={`rounded-full w-2 h-2 inline-block ${isLive ? "bg-green-400 animate-pulse" : "bg-[var(--color-dark-gray)]"
-                                }`}
-                        />
-                        {isLive ? stateLabels[state] || state : "Offline"}
-                    </p>
-                </div>
-            </section>
-
-            {/* ── Live transcript (Immediate) — DISABLED: duplicated by TalkTranscript panel at the bottom ── */}
-            {/* {isLive && liveAgentText && (
-                <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-[var(--color-gray)] text-lg max-w-4xl text-center font-medium leading-relaxed drop-shadow-md"
-                >
-                    {liveAgentText}
-                </motion.div>
-            )} */}
-
-            {/* ── Board Text (rich markdown board) ── */}
-            {boardText && (
-                <BoardPanel
-                    content={boardText}
-                    highlights={boardHighlights}
-                    className="w-full max-w-5xl "
+    const matrixEl = (
+        <div className="relative group flex-shrink-0">
+            {/* Glow effect behind matrix */}
+            <div
+                className="absolute -inset-4 bg-gradient-to-r from-[var(--color-orange)]/10 to-transparent blur-xl rounded-full transition-opacity duration-700 pointer-events-none"
+                style={{ opacity: isAgentSpeaking ? 0.6 : isThinking ? 0.4 : isListening ? 0.3 : 0.15 }}
+            />
+            <div className="relative rounded-2xl bg-[var(--color-darkest-gray)]/50 border border-[var(--color-darker-gray)] backdrop-blur-sm shadow-2xl shadow-black/50 transition-all duration-500">
+                <Matrix
+                    rows={15}
+                    cols={28}
+                    size={6}
+                    gap={3}
+                    {...(isLive
+                        ? isThinking
+                            // Thinking → animated pulse pattern
+                            ? { frames: pulse, fps: 12, loop: true }
+                            // Speaking/Listening → VU dotted bar equalizer
+                            : { mode: "vu" as const, levels: activeLevels }
+                        // Disconnected → hero neural pulse (same as homepage)
+                        : { frames: heroFrames, fps: 30, loop: true })}
+                    palette={{
+                        on: "var(--color-orange)",
+                        off: "var(--color-dark-gray)",
+                    }}
+                    className="opacity-90"
+                    ariaLabel="Voice Visualizer"
                 />
-            )}
+            </div>
+        </div>
+    );
+
+    const logoEl = (
+        <div className="flex flex-col items-center gap-1 relative z-10 flex-shrink-0">
+            <div className="relative">
+                {/* Glow behind logo when AI speaking */}
+                <div
+                    className="absolute -inset-4 bg-[var(--color-orange)]/20 blur-xl rounded-full transition-all duration-500 pointer-events-none"
+                    style={{
+                        opacity: isAgentSpeaking ? 1 : 0,
+                        transform: isAgentSpeaking ? "scale(1)" : "scale(0.5)",
+                    }}
+                />
+                <img
+                    src="/unlockpi-logo.png"
+                    alt="UnlockPi Logo"
+                    className="h-14 w-auto object-contain relative z-10 drop-shadow-2xl"
+                />
+            </div>
+            <h2 className="text-white text-xl font-bold tracking-tight">UnlockPi</h2>
+            <p className="text-[var(--color-gray)] text-xs tracking-wider flex items-center gap-1.5">
+                <span className={`rounded-full w-2 h-2 inline-block ${isLive ? "bg-green-400 animate-pulse" : "bg-[var(--color-dark-gray)]"}`} />
+                {isLive ? stateLabels[state] || state : "Offline"}
+            </p>
+        </div>
+    );
+
+    // ── NOT connected: original centered hero layout ──────────────────────
+    if (!isConnected) {
+        return (
+            <div className="flex flex-col items-center justify-center w-full max-w-7xl gap-8 relative z-10 min-h-0">
+                <section className="flex flex-row-reverse items-center gap-10">
+                    {matrixEl}
+                    {logoEl}
+                </section>
+            </div>
+        );
+    }
+
+    // ── CONNECTED: compact header + full-height board + centered transcript overlay ──
+    return (
+        // flex-1 + min-h-0 lets this fill all remaining height in the parent flex column
+        <div className="flex flex-col w-full flex-1 min-h-0 relative z-10">
+
+            {/* ── Compact header bar: logo | matrix | controls, centered with gaps ── */}
+            <div className="flex items-center justify-center w-full px-4 py-2 gap-10 flex-shrink-0 border-b border-[var(--color-darker-gray)]/60">
+                {logoEl}
+                {matrixEl}
+                {/* Mic controls + disconnect */}
+                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                    <VoiceAssistantControlBar controls={{ leave: false }} />
+                    <button
+                        onClick={onDisconnect}
+                        className="text-xs text-[var(--color-gray)] hover:text-white underline decoration-dotted transition-colors"
+                    >
+                        Disconnect &amp; Exit
+                    </button>
+                </div>
+            </div>
+
+            {/* ── Board area: flex-1 fills all remaining height ── */}
+            <div className="relative flex-1 min-h-0 w-full overflow-hidden">
+                {boardText ? (
+                    <BoardPanel
+                        content={boardText}
+                        highlights={boardHighlights}
+                        // h-full stretches board into the flex-1 container; max-w/border overrides default sizing
+                        className="w-full h-full max-w-none rounded-none border-x-0 border-b-0"
+                    />
+                ) : (
+                    // Stable placeholder before the agent writes anything
+                    <div className="w-full h-full flex items-center justify-center text-[var(--color-darker-gray)] text-sm italic select-none">
+                        Board is empty — start talking to see content here
+                    </div>
+                )}
+
+                {/* Transcript floats over the bottom of the board, centered horizontally */}
+                {transcriptSlot && (
+                    <div className="absolute bottom-0 left-0 right-0 z-20 flex justify-center bg-gradient-to-t from-black/75 via-black/40 to-transparent pt-10 px-4 pb-3 pointer-events-none">
+                        <div className="pointer-events-auto w-full max-w-3xl">
+                            {transcriptSlot}
+                        </div>
+                    </div>
+                )}
+            </div>
 
         </div>
     );
 }
 
+// ── Hero animation frames (neural pulse — shown when disconnected) ─────────────
 const heroFrames = (() => {
     const frames: number[][][] = [];
     const rows = 15;
@@ -160,8 +210,6 @@ const heroFrames = (() => {
                 const w1 = Math.sin(normalizedX * Math.PI * 2 + t);
                 // Wave 2: Opposing faster wave
                 const w2 = Math.cos(normalizedX * Math.PI * 4 - t * 1.5);
-                // Wave 3: Vertical oscillation (unused in calc but part of the aesthetic)
-                // const w3 = Math.sin(t * 2);
 
                 // Calculate the "active zone" (center of the energy beam)
                 // It moves vertically based on the waves

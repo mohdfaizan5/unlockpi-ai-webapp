@@ -20,6 +20,8 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -423,6 +425,16 @@ export function BoardPanel({ content, highlights, className }: BoardPanelProps) 
             },
             // pre tag — pass through (code block handles wrapping)
             pre: ({ children }: any) => <>{children}</>,
+            // Images — wrapped in PhotoView so clicking opens the lightbox
+            img: ({ src, alt }: any) => (
+                <PhotoView src={src || ""}>
+                    <img
+                        src={src}
+                        alt={alt || ""}
+                        className="mx-auto rounded-lg cursor-zoom-in transition-opacity hover:opacity-90 max-w-full"
+                    />
+                </PhotoView>
+            ),
             // Custom table styling
             table: ({ children, ...props }: any) => (
                 <div className="overflow-x-auto my-4 border border-white/10 rounded-lg">
@@ -466,37 +478,40 @@ export function BoardPanel({ content, highlights, className }: BoardPanelProps) 
     return (
         <div
             className={cn(
-                "w-full max-w-3xl p-6 rounded-xl relative bg-amber-200 z-10",
+                "w-full max-w-3xl p-6 rounded-xl relative z-10",
                 "bg-[var(--color-darkest-gray)] border border-[var(--color-darker-gray)]",
                 "text-white text-lg leading-relaxed shadow-xl",
-                // Scrollable with subtle scrollbar
-                "min-h-96 overflow-y-auto",
-                // "[&::-webkit-scrollbar]:w-1.5",
-                // "[&::-webkit-scrollbar-track]:bg-transparent",
-                // "[&::-webkit-scrollbar-thumb]:bg-white/10",
-                // "[&::-webkit-scrollbar-thumb]:rounded-full",
-                // "[&::-webkit-scrollbar-thumb:hover]:bg-white/20",
+                // overflow-y-auto enables scrolling; min-h is intentionally removed so
+                // the parent can control height (e.g. h-full from TalkVisualizer)
+                "overflow-y-auto",
                 className
             )}
         >
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={content.slice(0, 50)} // Unique key triggers animation on major content changes
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="prose prose-invert max-w-none prose-p:leading-relaxed prose-headings:text-gray-300 prose-strong:text-white"
-                >
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                        components={components as any}
+            {/* PhotoProvider groups all images inside this board into one gallery */}
+            <PhotoProvider
+                speed={() => 300}
+                easing={(type) => (type === 2 ? "cubic-bezier(0.36,0,0.66,-0.56)" : "cubic-bezier(0.34,1.56,0.64,1)")}
+                maskOpacity={0.85}
+            >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={content.slice(0, 50)} // Unique key triggers animation on major content changes
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="prose prose-invert max-w-none prose-p:leading-relaxed prose-headings:text-gray-300 prose-strong:text-white"
                     >
-                        {content || "*Board is empty...*"}
-                    </ReactMarkdown>
-                </motion.div>
-            </AnimatePresence>
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex]}
+                            components={components as any}
+                        >
+                            {content || "*Board is empty...*"}
+                        </ReactMarkdown>
+                    </motion.div>
+                </AnimatePresence>
+            </PhotoProvider>
         </div>
     );
 }
