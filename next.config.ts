@@ -1,27 +1,30 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
+
+const withMDX = createMDX({
+  extension: /\.(md|mdx)$/,
+});
 
 const nextConfig: NextConfig = {
+  pageExtensions: ["ts", "tsx", "md", "mdx"],
   images: {
-    // Allow Next.js <Image> optimization from any external hostname
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // wildcard — any HTTPS host
+        hostname: "**",
       },
       {
         protocol: "http",
-        hostname: "**", // wildcard — any HTTP host (dev/intranet use)
+        hostname: "**",
       },
     ],
   },
   async headers() {
     return [
       {
-        // Apply to all routes
         source: "/(.*)",
         headers: [
           {
-            // Allow images from any origin (plain <img> tags, markdown, etc.)
             key: "Content-Security-Policy",
             value: "img-src * data: blob:;",
           },
@@ -31,4 +34,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withMDX(nextConfig);

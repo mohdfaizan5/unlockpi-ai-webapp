@@ -2,28 +2,52 @@
 
 import { useState } from "react";
 import { useRpcHandler } from "@/hooks/use-rpc-handler";
+import { useBoardState } from "./use-board-state";
+import type { BoardOperation } from "@/types/board";
 
 export function useBoardRPC() {
-    // ── Board State (markdown content + highlight words from agent) ──
-    // boardText: markdown string the agent wants rendered on the board
-    // boardHighlights: word-level highlights (styles handled by BoardPanel)
+    // ── Legacy Board State (markdown content + word-level highlights) ──
     const [boardText, setBoardText] = useState("");
     const [boardHighlights, setBoardHighlights] = useState<
         { word: string; type: string; positions: number[] }[]
     >([]);
 
-    // RPC: update_content — matches the agent's perform_rpc(method="update_content")
-    // Agent sends { text: "The quick brown fox..." }
-    useRpcHandler("update_content", async (payload: any) => {
-        console.log("[RPC] update_content:", payload);
-        if (payload.text !== undefined) {
-            setBoardText(payload.text);
-            setBoardHighlights([]); // Clear old highlights when text changes
+    // ── New Structured Board State ──
+    const { boardDocument, dispatch } = useBoardState();
+
+    // ── New RPC: board_operation — receives a single BoardOperation ──
+    useRpcHandler("board_operation", async (payload: any) => {
+        console.log("[RPC] board_operation:", payload);
+        const op = payload as BoardOperation;
+        if (op && op.type) {
+            dispatch(op);
         }
         return JSON.stringify({ success: true });
     });
 
-    // RPC: highlight_text — agent sends { words: [{ word, type, positions }] }
+    // ── New RPC: set_board — full board replacement ──
+    useRpcHandler("set_board", async (payload: any) => {
+        console.log("[RPC] set_board:", payload);
+        if (payload && payload.blocks) {
+            dispatch({ type: "setBoard", document: payload });
+            // Clear legacy state when structured board is active
+            setBoardText("");
+            setBoardHighlights([]);
+        }
+        return JSON.stringify({ success: true });
+    });
+
+    // ── Legacy RPC: update_content (markdown string) ──
+    useRpcHandler("update_content", async (payload: any) => {
+        console.log("[RPC] update_content:", payload);
+        if (payload.text !== undefined) {
+            setBoardText(payload.text);
+            setBoardHighlights([]);
+        }
+        return JSON.stringify({ success: true });
+    });
+
+    // ── Legacy RPC: highlight_text (word-level highlights) ──
     useRpcHandler("highlight_text", async (payload: any) => {
         console.log("[RPC] highlight_text:", payload);
         if (payload.words) {
@@ -32,20 +56,20 @@ export function useBoardRPC() {
         return JSON.stringify({ success: true });
     });
 
-    // RPC: clear_board — agent clears both text and highlights
+    // RPC: clear_board — clears both legacy and structured board
     useRpcHandler("clear_board", async () => {
         console.log("[RPC] clear_board");
         setBoardText("");
         setBoardHighlights([]);
+        dispatch({ type: "setBoard", document: { id: "board-1", version: 0, blocks: [] } });
         return JSON.stringify({ success: true });
     });
 
-    // RPC: show_student_focus — no-op on talk page (no seating matrix here)
-    // Registered so the agent doesn't get "Method not supported" errors
+    // RPC: show_student_focus — no-op on talk page
     useRpcHandler("show_student_focus", async (payload: any) => {
         console.log("[RPC] show_student_focus (ignored on talk page):", payload);
         return JSON.stringify({ success: true });
     });
 
-    return { boardText, boardHighlights };
+    return { boardText, boardHighlights, boardDocument };
 }
