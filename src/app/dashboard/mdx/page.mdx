@@ -2,9 +2,11 @@ export const metadata = {
   title: "MDX Playground",
 };
 
+<div className="max-w-4xl py-4 mx-auto">
 # MDX Playground
 
 This route is static content powered by **MDX** and the global styles from `mdx-components.tsx`.
+
 
 <MdxCallout>
   Use this page like your `/dashboard/md` test page, but for MDX authoring.
@@ -20,6 +22,7 @@ If these styles render correctly, your MDX pipeline is wired:
 - Custom JSX components like `<MdxCallout>`
 
 ## Markdown Features
+<div className=" max-w-7xl mx-auto">
 
 <Mermaid
   chart={`
@@ -29,6 +32,7 @@ graph TD
     C --> D[Review Output]
 `}
 />
+</div>
 <Mermaid
   chart={`
 sequenceDiagram
@@ -82,3 +86,5 @@ export function DemoCard({ title, level = "basic" }: DemoProps) {
 2. Import an existing UI component and render it in this file.
 3. Create a second MDX page under `src/app/dashboard/mdx/` and compare styles.
 4. Copy lesson content here and test readability before production use.
+
+</div>

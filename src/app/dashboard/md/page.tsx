@@ -60,11 +60,11 @@ And some math: $$E = mc^2$$
                 cjk: cjk,
             }}
             components={{
-                strong: ({ children }: { children: React.ReactNode }) => (
-                    <span className="bg-red-500 text-white">
-                        {children}
-                    </span>
-                ),
+                // strong: ({ children }: { children: React.ReactNode }) => (
+                //     <span className="bg-red-500 text-white">
+                //         {children}
+                //     </span>
+                // ),
                 // p: ({ children }) => (
                 //     <p className=" leading-relaxed text-gray-700 -text-blue-500">
                 //         {children}

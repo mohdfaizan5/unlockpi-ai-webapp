@@ -1,24 +1,28 @@
-import { VoiceAssistantControlBar } from "@livekit/components-react";
+import { AgentState, TrackReferenceOrPlaceholder, VoiceAssistantControlBar } from "@livekit/components-react";
 import { TalkBrand } from "./talk-brand";
 import { TalkMatrix } from "./talk-matrix";
 
 interface TalkHeaderBarProps {
   stateLabel: string;
+  state: AgentState;
   isLive: boolean;
   isAgentSpeaking: boolean;
   isThinking: boolean;
   isListening: boolean;
   activeLevels: number[];
+  audioTrack?: TrackReferenceOrPlaceholder;
   onDisconnect: () => void;
 }
 
 export function TalkHeaderBar({
   stateLabel,
+  state,
   isLive,
   isAgentSpeaking,
   isThinking,
   isListening,
   activeLevels,
+  audioTrack,
   onDisconnect,
 }: TalkHeaderBarProps) {
   return (
@@ -31,6 +35,8 @@ export function TalkHeaderBar({
         isThinking={isThinking}
         isListening={isListening}
         activeLevels={activeLevels}
+        state={state}
+        audioTrack={audioTrack}
       />
 
       <div className="flex flex-col items-center gap-1.5 flex-shrink-0">

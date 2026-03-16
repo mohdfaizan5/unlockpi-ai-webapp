@@ -17,13 +17,13 @@ export function TalkBoardStage({ boardText, boardHighlights, boardDocument, tran
       {hasStructuredBoard ? (
         <BoardDocumentPanel
           document={boardDocument}
-          className="w-full h-full max-w-none rounded-none border-x-0 border-b-0"
+          className="w-full h-full max-w-7xl mx-auto rounded-none border-x-0 border-b-0"
         />
       ) : boardText ? (
         <BoardPanel
           content={boardText}
           highlights={boardHighlights}
-          className="w-full h-full max-w-none rounded-none border-x-0 border-b-0"
+          className="w-full h-full max-w-7xl mx-auto rounded-none border-x-0 border-b-0"
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-[var(--color-darker-gray)] text-sm italic select-none">

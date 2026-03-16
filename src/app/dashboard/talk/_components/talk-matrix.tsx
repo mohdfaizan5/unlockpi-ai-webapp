@@ -1,4 +1,8 @@
 import { Matrix, pulse } from "@/components/ui/matrix";
+import { AgentAudioVisualizerWave } from "@/components/agent-audio-visualizer-wave";
+import type { AgentState, TrackReferenceOrPlaceholder } from "@livekit/components-react";
+
+const USE_WAVE_VISUALIZER = true;
 
 interface TalkMatrixProps {
   isLive: boolean;
@@ -6,9 +10,19 @@ interface TalkMatrixProps {
   isThinking: boolean;
   isListening: boolean;
   activeLevels: number[];
+  state?: AgentState;
+  audioTrack?: TrackReferenceOrPlaceholder;
 }
 
-export function TalkMatrix({ isLive, isAgentSpeaking, isThinking, isListening, activeLevels }: TalkMatrixProps) {
+export function TalkMatrix({
+  isLive,
+  isAgentSpeaking,
+  isThinking,
+  isListening,
+  activeLevels,
+  state,
+  audioTrack,
+}: TalkMatrixProps) {
   return (
     <div className="relative group flex-shrink-0">
       <div
@@ -16,23 +30,36 @@ export function TalkMatrix({ isLive, isAgentSpeaking, isThinking, isListening, a
         style={{ opacity: isAgentSpeaking ? 0.6 : isThinking ? 0.4 : isListening ? 0.3 : 0.15 }}
       />
       <div className="relative rounded-2xl bg-[var(--color-darkest-gray)]/50 border border-[var(--color-darker-gray)] backdrop-blur-sm shadow-2xl shadow-black/50 transition-all duration-500">
-        <Matrix
-          rows={15}
-          cols={28}
-          size={6}
-          gap={3}
-          {...(isLive
-            ? isThinking
-              ? { frames: pulse, fps: 12, loop: true }
-              : { mode: "vu" as const, levels: activeLevels }
-            : { frames: heroFrames, fps: 30, loop: true })}
-          palette={{
-            on: "var(--color-orange)",
-            off: "var(--color-dark-gray)",
-          }}
-          className="opacity-90"
-          ariaLabel="Voice Visualizer"
-        />
+        {USE_WAVE_VISUALIZER ? (
+          <AgentAudioVisualizerWave
+            size="md"
+            color="#dc2626"
+            blur={0.1}
+            lineWidth={2}
+            audioTrack={audioTrack}
+            state={state}
+            colorShift={0.3}
+            className="opacity-90"
+          />
+        ) : (
+          <Matrix
+            rows={15}
+            cols={28}
+            size={6}
+            gap={3}
+            {...(isLive
+              ? isThinking
+                ? { frames: pulse, fps: 12, loop: true }
+                : { mode: "vu" as const, levels: activeLevels }
+              : { frames: heroFrames, fps: 30, loop: true })}
+            palette={{
+              on: "var(--color-orange)",
+              off: "var(--color-dark-gray)",
+            }}
+            className="opacity-90"
+            ariaLabel="Voice Visualizer"
+          />
+        )}
       </div>
     </div>
   );

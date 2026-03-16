@@ -90,7 +90,10 @@ export function MdxMermaid({ chart }: MdxMermaidProps) {
   return (
     <div
       className="my-4 overflow-x-auto rounded-lg border border-(--color-darker-gray) bg-(--color-darkest-gray)/70 p-3"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    >
+      <div
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
   );
 }

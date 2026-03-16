@@ -1,6 +1,6 @@
 "use client";
 
-import { TrackReferenceOrPlaceholder } from "@livekit/components-react";
+import { AgentState, TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { useAudioAnalyzer } from "@/hooks/use-audio-analyzer";
 import { HighlightWord } from "@/components/board-panel";
 import type { BoardDocument } from "@/types/board";
@@ -10,7 +10,7 @@ import { TalkBrand } from "./talk-brand";
 import { TalkMatrix } from "./talk-matrix";
 
 interface TalkVisualizerProps {
-  state: string;
+  state: AgentState;
   isLive: boolean;
   isConnected: boolean;
   audioTrack?: TrackReferenceOrPlaceholder;
@@ -69,6 +69,8 @@ export function TalkVisualizer({
             isThinking={isThinking}
             isListening={isListening}
             activeLevels={activeLevels}
+            state={state}
+            audioTrack={audioTrack}
           />
           <TalkBrand isLive={isLive} isAgentSpeaking={isAgentSpeaking} stateLabel={stateLabel} />
         </section>
@@ -80,11 +82,13 @@ export function TalkVisualizer({
     <div className="flex flex-col w-full flex-1 min-h-0 relative z-10">
       <TalkHeaderBar
         stateLabel={stateLabel}
+        state={state}
         isLive={isLive}
         isAgentSpeaking={isAgentSpeaking}
         isThinking={isThinking}
         isListening={isListening}
         activeLevels={activeLevels}
+        audioTrack={audioTrack}
         onDisconnect={onDisconnect}
       />
       <TalkBoardStage boardText={boardText} boardHighlights={boardHighlights} boardDocument={boardDocument} transcriptSlot={transcriptSlot} />

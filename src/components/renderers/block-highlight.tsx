@@ -31,12 +31,14 @@ export function BlockHighlight({ type, children }: BlockHighlightProps) {
       }}
       className="rounded-r pl-3 py-1.5 my-1"
     >
-      <span
+
+      {/* TODO: I"ve rm the imp and other highlighting labels */}
+      {/* <span
         className="text-xs font-semibold uppercase tracking-wider mb-0.5 block"
         style={{ color: style.border, opacity: 0.8 }}
       >
         {style.label}
-      </span>
+      </span> */}
       {children}
     </motion.div>
   );

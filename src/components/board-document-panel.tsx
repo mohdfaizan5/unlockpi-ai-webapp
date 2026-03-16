@@ -14,7 +14,7 @@ export function BoardDocumentPanel({ document, className }: BoardDocumentPanelPr
   return (
     <div
       className={cn(
-        "w-full max-w-3xl p-6 rounded-xl relative z-10",
+        "w-full max-w-7xl p-6 rounded-xl relative z-10",
         "bg-[var(--color-darkest-gray)] border border-[var(--color-darker-gray)]",
         "text-white text-lg leading-relaxed shadow-xl overflow-y-auto",
         className
