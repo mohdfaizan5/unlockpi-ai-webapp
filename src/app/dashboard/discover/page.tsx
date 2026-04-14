@@ -44,7 +44,7 @@ const features: DiscoverCard[] = [
         name: "Start Guided Session",
         description:
             "Open intake instantly and scaffold a complete lesson with topic, goals, and agenda.",
-        href: "/session/new",
+        href: "/dashboard/session/new",
         cta: "Create session",
         className: "col-span-1 md:col-span-2 xl:col-span-2",
         background: cardBackground(
@@ -68,7 +68,7 @@ const features: DiscoverCard[] = [
         Icon: BookOpenCheckIcon,
         name: "Revision Sprint",
         description: "Set up a high-focus revision session for exam prep in one click.",
-        href: "/session/new?template=revision",
+        href: "/dashboard/session/new?template=revision",
         cta: "Start revision",
         className: "col-span-1",
         background: cardBackground(
@@ -80,7 +80,7 @@ const features: DiscoverCard[] = [
         Icon: TargetIcon,
         name: "Diagnostic Check",
         description: "Create a diagnostic session to quickly identify student gaps.",
-        href: "/session/new?template=diagnostic",
+        href: "/dashboard/session/new?template=diagnostic",
         cta: "Run diagnostic",
         className: "col-span-1",
         background: cardBackground(
@@ -92,7 +92,7 @@ const features: DiscoverCard[] = [
         Icon: GraduationCapIcon,
         name: "Concept Masterclass",
         description: "Build a deeper concept-first class with guided examples.",
-        href: "/session/new?template=masterclass",
+        href: "/dashboard/session/new?template=masterclass",
         cta: "Plan masterclass",
         className: "col-span-1",
         background: cardBackground(
@@ -104,7 +104,7 @@ const features: DiscoverCard[] = [
         Icon: MessageSquareMoreIcon,
         name: "Discussion Session",
         description: "Launch an oral discussion or viva-style teaching session quickly.",
-        href: "/session/new?template=discussion",
+        href: "/dashboard/session/new?template=discussion",
         cta: "Start discussion",
         className: "col-span-1",
         background: cardBackground(

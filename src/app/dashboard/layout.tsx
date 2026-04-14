@@ -19,7 +19,7 @@ export default async function DashboardLayout({
   const { data, error } = await supabase.auth.getClaims();
 
   if (error || !data?.claims) {
-    redirect("/login");
+    redirect("/auth/login");
   }
 
   return (

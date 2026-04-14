@@ -103,14 +103,14 @@ const topItems: MainItem[] = [
 
 const quickAction = {
   title: "New session",
-  url: "/session/new",
+  url: "/dashboard/session/new",
   icon: PenLineIcon,
   hint: "Open session intake and start teaching flow",
 }
 
 const footerItems = [
   { title: "Help & feedback", icon: CircleHelpIcon, url: "#" },
-  { title: "Settings", icon: Settings2Icon, url: "/settings" },
+  { title: "Settings", icon: Settings2Icon, url: "/dashboard/settings" },
 ]
 
 function SidebarCollapseButton() {
@@ -243,7 +243,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [])
 
   useEffect(() => {
-    void loadWorkspace()
+    const timeoutId = window.setTimeout(() => {
+      void loadWorkspace()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadWorkspace])
 
   const openProjectSheet = useCallback(() => {
@@ -264,8 +270,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     if (requestedQuickAction === "new-project") {
-      openProjectSheet()
       handledQuickActionRef.current = key
+
+      const timeoutId = window.setTimeout(() => {
+        openProjectSheet()
+      }, 0)
+
+      return () => {
+        window.clearTimeout(timeoutId)
+      }
     }
   }, [openProjectSheet, pathname, searchParams])
 
@@ -503,8 +516,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               size="icon-sm"
                               variant="ghost"
                               className="group-data-[collapsible=icon]:hidden"
-                              render={<Link href={`/session/new?project_id=${project.id}`} />}
-                              nativeButton={false}
+                              render={<Link href={`/dashboard/session/new?project_id=${project.id}`} />}
                               aria-label={`Create session in ${project.name}`}
                             >
                               <PlusIcon className="size-4" />

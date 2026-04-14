@@ -2,7 +2,7 @@ import dynamic from "next/dynamic"
 
 import { SectionCards } from "@/components/section-cards"
 
-import data from "./data.json"
+import data from "../data.json"
 
 const ChartAreaInteractive = dynamic(
   () =>
