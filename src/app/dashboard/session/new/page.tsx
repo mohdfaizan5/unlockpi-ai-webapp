@@ -223,7 +223,6 @@ export default function NewSessionPage() {
           Back
         </Button>
       </div>
-                render={<Link href="/dashboard/session/new?quickAction=new-project" />}
 
       <Card className="border-border">
         <CardHeader className="border-b">
