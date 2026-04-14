@@ -37,7 +37,7 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                <Button variant="outline" render={<Link href="/dashboard/discover" />} nativeButton={false}>
+                    <Button variant="outline" render={<Link href="/dashboard/discover" />}>
                     Back to discover
                 </Button>
             </div>

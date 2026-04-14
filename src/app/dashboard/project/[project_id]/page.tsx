@@ -80,7 +80,7 @@ export default async function ProjectDetailPage({
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    redirect("/login")
+    redirect("/auth/login")
   }
 
   const { data: projectData, error: projectError } = await supabase
@@ -148,44 +148,32 @@ export default async function ProjectDetailPage({
 
       </div>
       <Button
-        render={<Link href={`/session/new?project_id=${project.id}`} />}
+        render={<Link href={`/dashboard/session/new?project_id=${project.id}`} />}
       >
         <PenLineIcon className="size-4" />
         New session
       </Button>
 
       <section className="max-w-4xl py-10 px-5">
-        {
-          sessions.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {sessions.map((session) => (
-                <TiltCard
-                  className="max-w-4xl h-32"
-                  title={session.title}
-                  description={session.lesson_structure}
-                  price="Free"
-                  badgeLabel="Popular"
-                  // imageSrc="/preview.png"
-                  href="/templates/starter"
-                />
-                // <Card>
-                //   <CardHeader className="flex justify-between items-center">
-                //     <CardTitle>{session.title}</CardTitle>
-                //     <p>{formatDate(session.created_at)}</p>
-                //   </CardHeader>
-                //   <CardPanel>
-                //     <CardDescription>{session.lesson_structure}</CardDescription>
-                //   </CardPanel>
-
-                // </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-              No sessions created yet. Click on New session to create your first teaching chat.
-            </div>
-          )
-        }
+        {sessions.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {sessions.map((session) => (
+              <TiltCard
+                key={session.id}
+                className="max-w-4xl h-32"
+                title={session.title}
+                description={session.lesson_structure}
+                price="Free"
+                badgeLabel="Popular"
+                href={`/dashboard/talk?projectId=${project.id}&sessionId=${session.id}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+            No sessions created yet. Click on New session to create your first teaching chat.
+          </div>
+        )}
       </section>
       {/* 
         <CardFooter>Footer</CardFooter> */}

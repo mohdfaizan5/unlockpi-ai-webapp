@@ -16,7 +16,6 @@ export function SiteHeader() {
           variant="default"
           size="sm"
           render={<Link href="/dashboard/classroom" />}
-          nativeButton={false}
         >
           Present Mode
         </Button>

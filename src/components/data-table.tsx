@@ -1,4 +1,5 @@
 "use client"
+"use no memo"
 
 import * as React from "react"
 import {
@@ -122,7 +123,7 @@ function DragHandle({ id }: { id: number }) {
     </Button>
   )
 }
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+const getColumns = (): ColumnDef<z.infer<typeof schema>>[] => [
   {
     id: "drag",
     header: () => null,
@@ -334,6 +335,8 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[]
 }) {
+  "use no memo"
+
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -356,6 +359,8 @@ export function DataTable({
     () => data?.map(({ id }) => id) || [],
     [data]
   )
+  const columns = getColumns()
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -680,11 +685,13 @@ const chartConfig = {
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile()
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="w-fit px-0 text-left text-foreground">
-          {item.header}
-        </Button>
+    <Drawer position={isMobile ? "bottom" : "right"}>
+      <DrawerTrigger
+        render={
+          <Button variant="link" className="w-fit px-0 text-left text-foreground" />
+        }
+      >
+        {item.header}
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
@@ -861,9 +868,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         </div>
         <DrawerFooter>
           <Button>Submit</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
+          <DrawerClose render={<Button variant="outline" />}>Cancel</DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

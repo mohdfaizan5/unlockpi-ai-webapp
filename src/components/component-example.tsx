@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 
 import {
   Example,
@@ -8,13 +9,11 @@ import {
 } from "@/components/example"
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
+  AlertDialogClose,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/card"
 import {
   Combobox,
-  ComboboxContent,
+  ComboboxPopup,
   ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
@@ -54,7 +53,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -81,10 +80,12 @@ function CardExample() {
     <Example title="Card" className="items-center justify-center">
       <Card className="relative w-full max-w-sm overflow-hidden pt-0">
         <div className="bg-primary absolute inset-0 z-30 aspect-video opacity-50 mix-blend-color" />
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1604076850742-4c7221f3101b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Photo by mymind on Unsplash"
           title="Photo by mymind on Unsplash"
+          width={1887}
+          height={1200}
           className="relative z-20 aspect-video w-full object-cover brightness-60 grayscale"
         />
         <CardHeader>
@@ -101,12 +102,12 @@ function CardExample() {
               <PlusIcon data-icon="inline-start" />
               Show Dialog
             </AlertDialogTrigger>
-            <AlertDialogContent size="sm">
+            <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogMedia>
+                <div className="mb-2 flex size-10 items-center justify-center rounded-full bg-muted">
                   <BluetoothIcon
                   />
-                </AlertDialogMedia>
+                </div>
                 <AlertDialogTitle>Allow accessory to connect?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Do you want to allow the USB accessory to connect to this
@@ -114,8 +115,12 @@ function CardExample() {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Don&apos;t allow</AlertDialogCancel>
-                <AlertDialogAction>Allow</AlertDialogAction>
+                <AlertDialogClose render={<Button variant="outline" />}>
+                  Don&apos;t allow
+                </AlertDialogClose>
+                <AlertDialogClose render={<Button />}>
+                  Allow
+                </AlertDialogClose>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -429,7 +434,7 @@ function FormExample() {
         </CardHeader>
         <CardContent>
           <form>
-            <FieldGroup>
+            <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="small-form-name">Name</FieldLabel>
@@ -467,7 +472,7 @@ function FormExample() {
                     placeholder="Select a framework"
                     required
                   />
-                  <ComboboxContent>
+                  <ComboboxPopup>
                     <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
@@ -476,7 +481,7 @@ function FormExample() {
                         </ComboboxItem>
                       )}
                     </ComboboxList>
-                  </ComboboxContent>
+                  </ComboboxPopup>
                 </Combobox>
               </Field>
               <Field>
@@ -486,13 +491,13 @@ function FormExample() {
                   placeholder="Add any additional comments"
                 />
               </Field>
-              <Field orientation="horizontal">
+              <Field className="flex-row items-center gap-2">
                 <Button type="submit">Submit</Button>
                 <Button variant="outline" type="button">
                   Cancel
                 </Button>
               </Field>
-            </FieldGroup>
+            </div>
           </form>
         </CardContent>
       </Card>

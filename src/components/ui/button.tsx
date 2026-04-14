@@ -89,7 +89,10 @@ export function Button({
   };
 
   return useRender({
-    defaultTagName: "button",
+    // When a custom `render` element is provided, render an inline `span`
+    // instead of a `button` to avoid nested <button> elements (e.g. when
+    // wrapped by DialogTrigger/DrawerTrigger which may render a button).
+    defaultTagName: render ? "span" : "button",
     props: mergeProps<"button">(defaultProps, props),
     render,
   });

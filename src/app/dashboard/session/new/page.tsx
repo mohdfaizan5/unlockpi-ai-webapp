@@ -121,7 +121,7 @@ export default function NewSessionPage() {
       } = await supabase.auth.getUser()
 
       if (authError || !user) {
-        router.replace("/login")
+        router.replace("/auth/login")
         return
       }
 
@@ -223,7 +223,7 @@ export default function NewSessionPage() {
           Back
         </Button>
       </div>
-
+                render={<Link href="/dashboard/session/new?quickAction=new-project" />}
 
       <Card className="border-border">
         <CardHeader className="border-b">
@@ -284,7 +284,7 @@ export default function NewSessionPage() {
               </p>
               <Button
                 variant="default"
-                render={<Link href="/dashboard/discover?quickAction=new-project" />}
+                render={<Link href="/dashboard/session/new?quickAction=new-project" />}
               >
                 Create project first
               </Button>
