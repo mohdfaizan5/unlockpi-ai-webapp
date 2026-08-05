@@ -22,6 +22,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedPlaceholder } from "@/features/visuals/components/animated-placeholder";
 import { MermaidPreview } from "@/features/visuals/components/mermaid-preview";
 import {
@@ -289,8 +290,8 @@ function PendingCard({ createdAt }: { createdAt?: number }) {
   }, [createdAt]);
 
   return (
-    <div className="mb-4 flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-muted/40">
-      <div className="size-8 animate-pulse rounded-full bg-muted-foreground/20" />
+    <div className="mb-4 flex h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-muted/40">
+      <Skeleton className="size-9 rounded-full" />
       <Shimmer className="text-xs">{message}</Shimmer>
     </div>
   );
@@ -304,7 +305,7 @@ function VisualCard({
   onMermaidInvalid: (code: string, error: string) => void;
 }) {
   return (
-    <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="mb-4 overflow-hidden rounded-2xl border border-border bg-card shadow-xs/5">
       {visual.kind === "image" && visual.image_url ? (
         // UploadThing serves these; plain img avoids next/image remote config.
         // eslint-disable-next-line @next/next/no-img-element

@@ -49,7 +49,7 @@ export function TalkRoomContent({
       <TalkBackground state={state} />
 
       {isConnected && agentWarning ? (
-        <div className="absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-full border border-amber-300/20 bg-amber-200/10 px-3 py-1 text-[11px] font-semibold text-amber-100 backdrop-blur-xl">
+        <div className="absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-[11px] font-semibold text-warning backdrop-blur-xl">
           {agentWarning}
         </div>
       ) : null}

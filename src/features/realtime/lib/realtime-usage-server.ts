@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { RealtimeTokenUsage } from "@/features/realtime/types/realtime-usage";
 import { getRealtimeTokenRates } from "@/features/realtime/lib/realtime-pricing";
+import { sumTokenCost } from "@/lib/token-cost";
 
 type CreateUsageSessionArgs = {
   supabase: SupabaseClient;
@@ -47,13 +48,64 @@ export async function createRealtimeUsageSession({
     .select("id")
     .single();
 
-  return error ? null : data.id;
+  if (error) {
+    // Returning null here silently disables ALL cost tracking for the session
+    // that's about to start, with no other symptom. Log it so the cause is
+    // visible instead of surfacing later as "cost is always empty".
+    console.error(
+      "[realtime usage] Could not create the usage session row — cost tracking is DISABLED for this session:",
+      error,
+    );
+    return null;
+  }
+
+  return data.id;
+}
+
+/**
+ * Assumed audio tokens per second of streamed mic input.
+ * ⚠️ Unverified — keep in sync with the same constant in
+ * supabase/migrations/20260803_05_backfill_duration_estimate.sql.
+ */
+export const ASSUMED_AUDIO_TOKENS_PER_SECOND = 20;
+
+/**
+ * Safety net for sessions that end with NO recorded responses.
+ *
+ * OpenAI only reports token usage inside `response.done`. But it bills for
+ * audio input the whole time the mic is streaming — so a session where the
+ * model never answered (very common in Copilot mode, which is deliberately
+ * silent and only responds to act on a tool call) costs real money while
+ * reporting zero usage. Without this, those sessions record nothing at all.
+ *
+ * Returns a duration-based INPUT-audio estimate. Output is left at zero
+ * because no response was generated, so nothing was spoken or written.
+ */
+export function estimateSessionFromDuration(
+  durationSeconds: number,
+  model: string,
+) {
+  const resolved = getRealtimeTokenRates(model);
+  if (!resolved || durationSeconds <= 0) return null;
+
+  const inputAudioTokens = Math.round(
+    durationSeconds * ASSUMED_AUDIO_TOKENS_PER_SECOND,
+  );
+  const cost = sumTokenCost([
+    { tokens: inputAudioTokens, rate: resolved.rates.audioInput },
+  ]);
+
+  return {
+    input_audio_tokens: inputAudioTokens,
+    estimated_cost_usd: cost,
+    pricing_version: `${resolved.version}~duration-estimate`,
+  };
 }
 
 export function getRealtimeUsageRecord(usage: RealtimeTokenUsage, model: string) {
   const input = usage.input_token_details;
   const output = usage.output_token_details;
-  const record = {
+  let record: TokenRecord = {
     input_text_tokens: positiveInteger(input?.text_tokens),
     input_audio_tokens: positiveInteger(input?.audio_tokens),
     cached_text_tokens: positiveInteger(
@@ -66,15 +118,47 @@ export function getRealtimeUsageRecord(usage: RealtimeTokenUsage, model: string)
     output_audio_tokens: positiveInteger(output?.audio_tokens),
   };
 
+  // Guard against silently recording a $0 session. If OpenAI ever omits (or
+  // renames) the per-modality breakdown, every field above lands on 0 and the
+  // session looks free even though it cost real money. When that happens but
+  // top-level totals exist, keep the tokens and price them at the audio rate —
+  // realtime traffic is voice-dominated, so this errs high rather than
+  // pretending the session was free. The estimate is flagged `~approx`.
+  let approximated = false;
+  const detailTotal =
+    record.input_text_tokens +
+    record.input_audio_tokens +
+    record.output_text_tokens +
+    record.output_audio_tokens;
+  const fallbackInput = positiveInteger(usage.input_tokens);
+  const fallbackOutput = positiveInteger(usage.output_tokens);
+
+  if (detailTotal === 0 && fallbackInput + fallbackOutput > 0) {
+    approximated = true;
+    record = {
+      ...record,
+      input_audio_tokens: fallbackInput,
+      output_audio_tokens: fallbackOutput,
+    };
+  }
+
+  const priced = estimateCost(record, model);
+
   return {
     ...record,
-    estimated_cost_usd: estimateCost(record, model),
+    estimated_cost_usd: priced?.cost ?? null,
+    pricing_version: priced
+      ? approximated
+        ? `${priced.version}~approx`
+        : priced.version
+      : null,
   };
 }
 
 function estimateCost(tokens: TokenRecord, model: string) {
-  const rates = getRealtimeTokenRates(model);
-  if (!rates) return null;
+  const resolved = getRealtimeTokenRates(model);
+  if (!resolved) return null;
+  const { rates, version } = resolved;
 
   const categories = [
     {
@@ -103,12 +187,7 @@ function estimateCost(tokens: TokenRecord, model: string) {
     },
   ];
 
-  let total = 0;
-  for (const category of categories) {
-    if (category.tokens === 0) continue;
-    total += (category.tokens / 1_000_000) * category.rate;
-  }
-  return total;
+  return { cost: sumTokenCost(categories), version };
 }
 
 function positiveInteger(value: number | undefined) {

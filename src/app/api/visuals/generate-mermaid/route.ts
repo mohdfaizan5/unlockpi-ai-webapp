@@ -2,13 +2,13 @@ import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 
+import { estimateGenerationCost } from "@/features/visuals/lib/generation-pricing";
 import {
   buildMermaidSystemPrompt,
   mermaidResultSchema,
   sanitizeMermaidCode,
   type MermaidDiagramType,
 } from "@/features/visuals/lib/mermaid-config";
-import { ESTIMATED_MERMAID_COST_USD } from "@/features/visuals/lib/visual-config";
 import { createClient } from "@/lib/server";
 
 export const runtime = "nodejs";
@@ -83,6 +83,11 @@ export async function POST(request: NextRequest) {
   }
 
   const code = sanitizeMermaidCode(result.object.code);
+  const priced = estimateGenerationCost({
+    model: MERMAID_MODEL,
+    inputTokens: result.usage?.inputTokens,
+    outputTokens: result.usage?.outputTokens,
+  });
 
   // A repair attempt isn't saved until the client confirms it renders.
   if (body.repairError) {
@@ -102,7 +107,10 @@ export async function POST(request: NextRequest) {
       prompt: description,
       style: diagramType,
       mermaid_code: code,
-      cost_usd: ESTIMATED_MERMAID_COST_USD,
+      cost_usd: priced?.costUsd ?? null,
+      input_tokens: result.usage?.inputTokens ?? null,
+      output_tokens: result.usage?.outputTokens ?? null,
+      pricing_version: priced?.version ?? null,
     })
     .select()
     .single();

@@ -73,10 +73,10 @@ export function OptionPopover({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center outline-none transition-[background-color,border-color,transform] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring",
+                  "focus-ring flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center outline-none transition-[background-color,border-color,transform] active:scale-[0.97]",
                   isActive
-                    ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "border-border bg-card text-muted-foreground hover:bg-accent",
+                    ? "border-primary/40 bg-primary/8 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
                 )}
               >
                 {option.preview ??

@@ -150,12 +150,26 @@ export function CanvasPresenter({
   const panel = useCopilotPanel();
   const [panelOpen, setPanelOpen] = useState(false);
   const { addPending: addPanelItem, resolve: resolvePanelItem } = panel;
+  const lastPanelRequestRef = useRef<{ key: string; at: number } | null>(null);
 
   // When the AI asks to show something in the panel: open it, drop a skeleton
   // in instantly, then generate independently and stream the result in. Because
   // this lives in the panel (not on the frame), navigating away never breaks it.
   const handlePanelRequest = useCallback(
     async (request: PanelGenerateRequest) => {
+      // Defensive dedupe: if the AI calls show_in_panel again for the same
+      // type+topic within a few seconds (e.g. from a forced follow-up
+      // response), don't spawn a second skeleton/generation for it.
+      const key = `${request.type}:${request.topic}`;
+      const now = Date.now();
+      if (
+        lastPanelRequestRef.current?.key === key &&
+        now - lastPanelRequestRef.current.at < 6000
+      ) {
+        return;
+      }
+      lastPanelRequestRef.current = { key, at: now };
+
       setPanelOpen(true);
       const itemId = addPanelItem(request.type, request.topic);
       try {
@@ -419,7 +433,7 @@ export function CanvasPresenter({
 
       {hasLiveChanges ? (
         <div className="absolute left-4 top-[4.75rem] z-30 flex items-center gap-1.5 rounded-full border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-xl">
-          <span className="size-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+          <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
           Live-only changes · not saved to canvas
         </div>
       ) : null}

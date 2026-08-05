@@ -54,7 +54,7 @@ const Logo = ({
   else
     return (
       <div
-        className={cn("flex flex-col items-center justify-center", className)}
+        className={cn("flex flex- items-center justify-center", className)}
       >
         <Image
           src={"/unlockpi-logo.png"}
@@ -62,7 +62,7 @@ const Logo = ({
           height={height}
           alt="logo"
         />
-        {full && <h2 className="font-medium text-2xl">FreelanceFlow</h2>}
+        {full && <h2 className="font-medium text-lg ml-1">UnlockPi</h2>}
         {isBeta && (
           <Badge variant={"secondary"} className="scale-[80%]">
             Beta

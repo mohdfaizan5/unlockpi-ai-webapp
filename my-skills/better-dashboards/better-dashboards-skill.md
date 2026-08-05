@@ -21,3 +21,10 @@ we'll mostly focus on
 3. handle loading states gracefully
 4. implement proper error boundaries, basically every feedback should be shown gracefully for the end user and a good log needs to written for dev, no production (not exactly everytime, but making sure it should leak our code implmentations or sensitive info)
 5. document complex logic clearly
+
+
+
+# Wriing better homes of dashboards
+1. first thing, check whether there is any sidebar or navigation menu, if there is your job is not to create another navigation menu in home page of dashboard,
+2. neither you're filling everything the application contains in dashboard, 
+3. dashboards are ment to show a litle bit of everything, they are not meant to repeat the whole stuff all together.

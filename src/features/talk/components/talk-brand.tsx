@@ -28,7 +28,7 @@ export function TalkBrand({ isLive, isAgentSpeaking, stateLabel }: TalkBrandProp
         <span
           className={cn(
             "rounded-full w-2 h-2 inline-block",
-            isLive ? "bg-green-400 animate-pulse" : "bg-[var(--color-dark-gray)]"
+            isLive ? "bg-success animate-pulse" : "bg-muted-foreground"
           )}
         />
         {isLive ? stateLabel : "Offline"}

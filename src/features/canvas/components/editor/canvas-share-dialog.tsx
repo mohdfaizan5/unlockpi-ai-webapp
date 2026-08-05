@@ -129,7 +129,7 @@ export function CanvasShareDialog({
                   >
                     {copySuccess ? (
                       <>
-                        <CheckIcon className="size-4 text-green-500" />
+                        <CheckIcon className="size-4 text-success" />
                         Copied
                       </>
                     ) : (

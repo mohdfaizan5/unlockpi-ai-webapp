@@ -41,22 +41,6 @@ export const IMAGE_MODELS = {
 export type ImageModelTier = keyof typeof IMAGE_MODELS;
 
 /**
- * Rough per-image cost estimates in USD, used only to populate `cost_usd` on
- * each row for later spend analysis in the admin panel.
- *
- * These are PLACEHOLDER figures, not billing-accurate numbers — update them
- * against the real per-image price at https://platform.openai.com/docs/pricing
- * before treating this as anything more than a directional signal.
- */
-export const ESTIMATED_IMAGE_COST_USD: Record<ImageModelTier, number> = {
-  standard: 0.02,
-  pro: 0.07,
-};
-
-/** Flat placeholder estimate for a Mermaid generation (one gpt-4o call). */
-export const ESTIMATED_MERMAID_COST_USD = 0.01;
-
-/**
  * OpenAI's image models only accept three sizes: 1024x1024, 1536x1024 and
  * 1024x1536. We expose four familiar ratios and map them to the nearest
  * supported size — 4:3 and 16:9 both land on the same landscape canvas.

@@ -59,11 +59,11 @@ export function CanvasCreateDialog({
             <PiChalkboardDuotone className="size-6" />
             Create canvas
           </DialogTitle>
-          <DialogDescription>
+          {/* <DialogDescription> */}
             {/* Search a Computer Science topic, then choose the template that */}
-            Search for a topic and choose the template that
+            {/* Search for a topic and choose the template that
             should open in the editor.
-          </DialogDescription>
+          </DialogDescription> */}
         </DialogHeader>
 
         <div className="grid gap-5 px-6 pb-2 mt-2">
@@ -71,7 +71,7 @@ export function CanvasCreateDialog({
             <div className="grid gap-2">
               <InputGroup
                 className={cn(
-                  "min-h-11 rounded-2xl transition-[border-color,box-shadow,background-color]",
+                  "min-h-11 pl-4 shadow-none ring-0 rounded-2xl transition-[border-color,box-shadow,background-color]",
                   "hover:bg-accent/20 focus-within:bg-background",
                   "[&_[data-slot=input]]:bg-transparent [&_[data-slot=input]]:outline-none",
                   "[&_[data-slot=input]]:ring-0 [&_[data-slot=input]]:shadow-none",
@@ -101,9 +101,9 @@ export function CanvasCreateDialog({
               render={(props) => <Fieldset {...props} className="max-w-none gap-3" />}
             >
               <FieldsetLegend className="text-sm">Start from template</FieldsetLegend>
-              <FieldDescription>
+              {/* <FieldDescription>
                 Pick the starter layout that should open first in the editor.
-              </FieldDescription>
+              </FieldDescription> */}
               <RadioGroup
                 value={selectedTemplateKey}
                 onValueChange={(value) =>
@@ -137,7 +137,7 @@ export function CanvasCreateDialog({
                               {template.description}
                             </span>
                           </span>
-                          <span className="w-72 pt-4 pb-2 pr-2">
+                          <span className="w-24 md:w-40 pt-4 pb-2 pr-2">
                             <Image
                               src={preview.image}
                               alt={template.title}

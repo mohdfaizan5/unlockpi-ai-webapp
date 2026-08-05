@@ -638,11 +638,11 @@ function CheckpointCard({ checkpoint }: { checkpoint: ArrayLessonCheckpoint }) {
                 "rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
                 "border-border bg-card/80 hover:border-primary/40 hover:bg-primary/5",
                 isSelected && "border-primary bg-primary/10",
-                shouldReveal && optionIsCorrect && "border-emerald-500/40 bg-emerald-500/10",
+                shouldReveal && optionIsCorrect && "border-success/40 bg-success/10",
                 shouldReveal &&
                   isSelected &&
                   !optionIsCorrect &&
-                  "border-rose-500/40 bg-rose-500/10"
+                  "border-destructive/40 bg-destructive/10"
               )}
             >
               {option.label}
@@ -656,8 +656,8 @@ function CheckpointCard({ checkpoint }: { checkpoint: ArrayLessonCheckpoint }) {
           className={cn(
             "mt-4 rounded-2xl border px-4 py-3 text-sm leading-6",
             isCorrect
-              ? "border-emerald-500/30 bg-emerald-500/8 text-emerald-100"
-              : "border-amber-500/30 bg-amber-500/8 text-amber-100"
+              ? "border-success/30 bg-success/8 text-success"
+              : "border-warning/30 bg-warning/8 text-warning"
           )}
         >
           {checkpoint.explanation}

@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { FolderIcon, PenLineIcon } from "lucide-react";
+import { FilesIcon, FileTextIcon, FolderIcon, PenLineIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { CreateProjectDialog } from "@/features/project/components/create-project-dialog";
 import { ProjectsGrid } from "@/features/project/components/projects-grid";
 import type { TeachingProject } from "@/features/project/types/project-types";
@@ -40,7 +46,8 @@ export default async function ProjectsPage() {
     project_id: string | null;
   }>;
 
-  const canvasCounts = canvases.reduce<Record<string, number>>((acc, canvas) => {
+  const canvasCounts = canvases.reduce<Record<string, number>>(
+    (acc, canvas) => {
       if (!canvas.project_id) {
         return acc;
       }
@@ -68,7 +75,6 @@ export default async function ProjectsPage() {
             </p> */}
           </div>
         </div>
-
         <div className="flex flex-wrap gap-2">
           <CreateProjectDialog />
           {/* <Button

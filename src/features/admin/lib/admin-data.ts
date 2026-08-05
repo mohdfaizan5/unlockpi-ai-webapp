@@ -6,6 +6,7 @@ import type {
   AdminUser,
   AdminVisualGeneration,
 } from "@/features/admin/types/admin-types";
+import { aggregateVisualSpend } from "@/features/admin/lib/spend-aggregate";
 import { createAdminClient } from "@/lib/supabase-admin";
 
 const PAGE_SIZE = 1000;
@@ -25,13 +26,15 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       admin
         .from("ai_realtime_sessions")
         .select(
-          "id, owner_id, source, lesson_title, mode, model, status, started_at, ended_at, duration_seconds, response_count, input_text_tokens, input_audio_tokens, output_text_tokens, output_audio_tokens, estimated_cost_usd",
+          "id, owner_id, source, lesson_title, mode, model, status, started_at, ended_at, duration_seconds, response_count, input_text_tokens, input_audio_tokens, output_text_tokens, output_audio_tokens, estimated_cost_usd, pricing_version",
         )
         .order("started_at", { ascending: false })
         .limit(2000),
       admin
         .from("visuals")
-        .select("id, owner_id, kind, title, model_tier, cost_usd, created_at")
+        .select(
+          "id, owner_id, kind, title, model_tier, cost_usd, pricing_version, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(2000),
     ]);
@@ -85,6 +88,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         session.estimated_cost_usd === null
           ? null
           : Number(session.estimated_cost_usd),
+      pricingVersion: session.pricing_version ?? null,
     }),
   );
 
@@ -96,14 +100,11 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     title: row.title,
     modelTier: row.model_tier,
     costUsd: row.cost_usd === null ? null : Number(row.cost_usd),
+    pricingVersion: row.pricing_version ?? null,
     createdAt: row.created_at,
   }));
   const visualsSpend = {
-    totalCostUsd: visualGenerations.reduce(
-      (total, generation) => total + (generation.costUsd ?? 0),
-      0,
-    ),
-    totalGenerations: visualGenerations.length,
+    ...aggregateVisualSpend(visualGenerations),
     recent: visualGenerations.slice(0, 20),
   };
 
@@ -114,6 +115,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       return { date, activeUsers: activityByDay.get(date)?.size ?? 0 };
     }),
     realtimeSessions,
+    visualGenerations,
     visualsSpend,
   };
 }

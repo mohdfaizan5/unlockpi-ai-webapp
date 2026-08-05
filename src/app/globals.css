@@ -74,6 +74,11 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -95,6 +100,23 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/**
+ * Reusable focus ring — a soft brand-tinted glow, never a harsh full-opacity
+ * ring. Add `focus-ring` to any custom interactive element (chips, cards,
+ * buttons) so it matches the coss input primitives. See brand-guideline.md.
+ *
+ *   ❌  focus-visible:ring-2 focus-visible:ring-ring   (harsh red halo)
+ *   ✅  class="focus-ring"
+ */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 24%, transparent);
+  }
+}
+
 /* Light mode tokens. The app still defaults to dark via ThemeProvider. */
 :root {
   --background: #f7f8fb;
@@ -111,7 +133,14 @@
   --muted-foreground: #687385;
   --accent: #e6e9ef;
   --accent-foreground: #111827;
-  --destructive: #dc2626;
+  /* Destructive is a DEEPER red than primary (#dc2626) so a delete/error is
+     visually distinct from a brand CTA. See brand-guideline.md. */
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
   --border: #d9dee8;
   --input: #d9dee8;
   --ring: #dc2626;
@@ -147,7 +176,13 @@
   --muted-foreground: #747474;
   --accent: #3a3a3a;
   --accent-foreground: #efefef;
-  --destructive: #ff0000;
+  /* Distinct from primary (#dc2626) and softer than pure #ff0000. */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #4ade80;
+  --success-foreground: #052e16;
+  --warning: #fbbf24;
+  --warning-foreground: #231a00;
   --border: #232323;
   --input: #232323;
   --ring: #dc2626;

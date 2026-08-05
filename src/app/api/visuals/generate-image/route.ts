@@ -3,9 +3,9 @@ import { generateImage } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { UTApi } from "uploadthing/server";
 
+import { estimateGenerationCost } from "@/features/visuals/lib/generation-pricing";
 import {
   ASPECT_RATIOS,
-  ESTIMATED_IMAGE_COST_USD,
   IMAGE_MODELS,
   buildImagePrompt,
   type AspectRatioKey,
@@ -63,6 +63,8 @@ export async function POST(request: NextRequest) {
   const ratio = ASPECT_RATIOS[ratioKey];
 
   let images: { base64: string }[];
+  let inputTokens: number | undefined;
+  let outputTokens: number | undefined;
   try {
     const result = await generateImage({
       model: openai.image(tierConfig.model),
@@ -72,6 +74,10 @@ export async function POST(request: NextRequest) {
       providerOptions: { openai: { quality: tierConfig.quality } },
     });
     images = result.images;
+    // Combined usage for the whole call (may cover multiple images if n > 1) —
+    // split evenly per image below when saving.
+    inputTokens = result.usage?.inputTokens;
+    outputTokens = result.usage?.outputTokens;
   } catch (error) {
     console.error("[visuals/image] generation failed:", error);
     return NextResponse.json(
@@ -107,9 +113,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Rough per-image estimate for the admin spend panel — see the comment on
-  // ESTIMATED_IMAGE_COST_USD before treating this as billing-accurate.
-  const costPerImage = ESTIMATED_IMAGE_COST_USD[tier];
+  // Split the call's combined token usage evenly across the images it
+  // produced, and price each share — real tokens x rate, not a flat guess.
+  // `estimateGenerationCost` returns null (never 0) when the model has no
+  // rate card, so an unpriced model can't masquerade as a free generation.
+  const perImageInputTokens = inputTokens
+    ? Math.round(inputTokens / urls.length)
+    : undefined;
+  const perImageOutputTokens = outputTokens
+    ? Math.round(outputTokens / urls.length)
+    : undefined;
+  const priced = estimateGenerationCost({
+    model: tierConfig.model,
+    inputTokens: perImageInputTokens,
+    outputTokens: perImageOutputTokens,
+  });
 
   const { data: saved, error: saveError } = await supabase
     .from("visuals")
@@ -123,7 +141,10 @@ export async function POST(request: NextRequest) {
         aspect_ratio: ratioKey,
         model_tier: tier,
         image_url: url,
-        cost_usd: costPerImage,
+        cost_usd: priced?.costUsd ?? null,
+        input_tokens: perImageInputTokens ?? null,
+        output_tokens: perImageOutputTokens ?? null,
+        pricing_version: priced?.version ?? null,
       })),
     )
     .select();

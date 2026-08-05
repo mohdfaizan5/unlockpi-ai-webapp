@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { FormEvent, KeyboardEvent, useState } from "react"
-import { useRouter } from "next/navigation"
-import { motion, type Variants } from "motion/react"
+import { FormEvent, KeyboardEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, type Variants } from "motion/react";
 
 import {
   AlertTriangleIcon,
@@ -14,7 +14,8 @@ import {
   Share2Icon,
   ArchiveIcon,
   Trash2Icon,
-} from "lucide-react"
+  FileTextIcon,
+} from "lucide-react";
 
 import {
   AlertDialog,
@@ -24,16 +25,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardPanel,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -43,7 +44,7 @@ import {
   DialogPanel,
   DialogPopup,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerClose,
@@ -55,8 +56,8 @@ import {
   DrawerPanel,
   DrawerPopup,
   DrawerTrigger,
-} from "@/components/ui/drawer"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
 import {
   Menu,
   MenuGroup,
@@ -65,21 +66,21 @@ import {
   MenuPopup,
   MenuSeparator,
   MenuTrigger,
-} from "@/components/ui/menu"
-import type { TeachingProject } from "@/features/project/types/project-types"
-import { useMediaQuery } from "@/features/talk/hooks/use-media-query"
-import { toastManager } from "@/components/ui/toast"
-import { createClient } from "@/lib/client"
+} from "@/components/ui/menu";
+import type { TeachingProject } from "@/features/project/types/project-types";
+import { useMediaQuery } from "@/features/talk/hooks/use-media-query";
+import { toastManager } from "@/components/ui/toast";
+import { createClient } from "@/lib/client";
 
 type ProjectsGridProps = {
-  projects: TeachingProject[]
-  canvasCounts: Record<string, number>
-}
+  projects: TeachingProject[];
+  canvasCounts: Record<string, number>;
+};
 
 const cardListVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.04 } },
-} satisfies Variants
+} satisfies Variants;
 
 const cardItemVariants = {
   hidden: { opacity: 0, scale: 0.97 },
@@ -88,7 +89,7 @@ const cardItemVariants = {
     scale: 1,
     transition: { duration: 0.2, ease: "easeOut" },
   },
-} satisfies Variants
+} satisfies Variants;
 
 export function ProjectsGrid({ projects, canvasCounts }: ProjectsGridProps) {
   return (
@@ -106,113 +107,113 @@ export function ProjectsGrid({ projects, canvasCounts }: ProjectsGridProps) {
         />
       ))}
     </motion.div>
-  )
+  );
 }
 
 type ProjectFolderCardProps = {
-  project: TeachingProject
-  canvasCount: number
-}
+  project: TeachingProject;
+  canvasCount: number;
+};
 
 function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
-  const router = useRouter()
-  const isMobile = useMediaQuery("max-md")
-  const [isRenameOpen, setIsRenameOpen] = useState(false)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const [name, setName] = useState(project.name)
-  const [isRenaming, setIsRenaming] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter();
+  const isMobile = useMediaQuery("max-md");
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [name, setName] = useState(project.name);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const openProject = () => {
-    router.push(`/dashboard/project/${project.id}`)
-  }
+    router.push(`/dashboard/project/${project.id}`);
+  };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) {
-      return
+      return;
     }
 
     if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault()
-      openProject()
+      event.preventDefault();
+      openProject();
     }
-  }
+  };
 
   const stopCardNavigation = (event: { stopPropagation: () => void }) => {
-    event.stopPropagation()
-  }
+    event.stopPropagation();
+  };
 
   const handleRename = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const trimmedName = name.trim()
+    event.preventDefault();
+    const trimmedName = name.trim();
 
     if (!trimmedName) {
       toastManager.add({
         title: "Project name required",
         description: "Add a project name before saving.",
         type: "error",
-      })
-      return
+      });
+      return;
     }
 
-    setIsRenaming(true)
+    setIsRenaming(true);
 
-    const supabase = createClient()
+    const supabase = createClient();
     const { error } = await supabase
       .from("teaching_projects")
       .update({ name: trimmedName })
       .eq("id", project.id)
-      .eq("owner_id", project.owner_id)
+      .eq("owner_id", project.owner_id);
 
     if (error) {
       toastManager.add({
         title: "Project not renamed",
         description: error.message || "Unable to rename project.",
         type: "error",
-      })
-      setIsRenaming(false)
-      return
+      });
+      setIsRenaming(false);
+      return;
     }
 
     toastManager.add({
       title: "Project renamed",
       description: `${project.name} is now ${trimmedName}.`,
       type: "success",
-    })
-    setIsRenaming(false)
-    setIsRenameOpen(false)
-    router.refresh()
-  }
+    });
+    setIsRenaming(false);
+    setIsRenameOpen(false);
+    router.refresh();
+  };
 
   const handleDelete = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
 
-    const supabase = createClient()
+    const supabase = createClient();
     const { error } = await supabase
       .from("teaching_projects")
       .delete()
       .eq("id", project.id)
-      .eq("owner_id", project.owner_id)
+      .eq("owner_id", project.owner_id);
 
     if (error) {
       toastManager.add({
         title: "Project not deleted",
         description: error.message || "Unable to delete project.",
         type: "error",
-      })
-      setIsDeleting(false)
-      return
+      });
+      setIsDeleting(false);
+      return;
     }
 
     toastManager.add({
       title: "Project deleted",
       description: `${project.name} was removed.`,
       type: "success",
-    })
-    setIsDeleting(false)
-    setIsDeleteOpen(false)
-    router.refresh()
-  }
+    });
+    setIsDeleting(false);
+    setIsDeleteOpen(false);
+    router.refresh();
+  };
 
   const actionTrigger = (
     <Button
@@ -220,7 +221,7 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
       size="icon-sm"
       className="rounded-lg border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white dark:border-white/10 dark:bg-white/5 dark:text-muted-foreground dark:hover:bg-white/10 dark:hover:text-white"
     />
-  )
+  );
 
   return (
     <>
@@ -233,16 +234,23 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
         onKeyDown={handleCardKeyDown}
         variants={cardItemVariants}
       >
-        <Card className="relative h-40 w-80 rounded-none rounded-b-lg! rounded-r-lg! border-border/70 bg-foreground text-white transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-muted">
+        <Card className="relative h-40 w-[310px] rounded-none rounded-b-lg! rounded-r-lg! border-border/70 bg-foreground text-white transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-muted">
           <div className="absolute -top-3 h-5 w-10 rounded-tl-lg rounded-tr-lg bg-foreground" />
           <div className="absolute top-[2px] left-[24px] h-5 w-10 rotate-45 bg-foreground" />
-
-          <CardHeader className="gap-0 pb-0!">
+          {/* <FileTextIcon className="absolute z-0" strokeWidth={1} size={32} /> */}
+          {canvasCount > 0 && (
+            <div className="bg-foreground/60 group-hover:-translate-y-1 group-hover:-rotate-3 transition-all duration-200 absolute -top-2 -rotate-1 left-16 w-56 rounded-t-lg h-10"></div>
+          )}
+          {canvasCount > 1 && (
+            <div className="bg-foreground/70 group-hover:-translate-y-1 group-hover:-rotate-1 transition-all duration-200 absolute -top-1 -rotate-1 left-16 w-56 rounded-t-lg h-10"></div>
+          )}
+          <CardHeader className="gap-0 pb-0! z-10">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-2">
                 <CardTitle className="text-xl">{project.name}</CardTitle>
-                <CardDescription className="line-clamp-2 max-w-[13rem] text-sm leading-5 text-white/65 dark:text-muted-foreground">
-                  {project.description || "Open this project to see and manage all of its teaching canvases."}
+                <CardDescription className="line-clamp-2 max-w-60 text-sm leading-5 text-white/65 dark:text-muted-foreground">
+                  {project.description ||
+                    "Open this project to see and manage all of its teaching canvases."}
                 </CardDescription>
               </div>
 
@@ -266,8 +274,8 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
                               render={
                                 <DrawerMenuItem
                                   onClick={() => {
-                                    setName(project.name)
-                                    setIsRenameOpen(true)
+                                    setName(project.name);
+                                    setIsRenameOpen(true);
                                   }}
                                 />
                               }
@@ -286,7 +294,9 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
                           </DrawerMenuGroup>
                           <DrawerMenuSeparator />
                           <DrawerMenuGroup>
-                            <DrawerMenuGroupLabel>Danger zone</DrawerMenuGroupLabel>
+                            <DrawerMenuGroupLabel>
+                              Danger zone
+                            </DrawerMenuGroupLabel>
                             <DrawerClose
                               render={
                                 <DrawerMenuItem
@@ -313,8 +323,8 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
                         <MenuGroupLabel>Actions</MenuGroupLabel>
                         <MenuItem
                           onClick={() => {
-                            setName(project.name)
-                            setIsRenameOpen(true)
+                            setName(project.name);
+                            setIsRenameOpen(true);
                           }}
                         >
                           <PencilLineIcon className="size-4" />
@@ -370,7 +380,8 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
             <DialogHeader>
               <DialogTitle>Rename project</DialogTitle>
               <DialogDescription>
-                Give this project a clearer name without leaving the projects page.
+                Give this project a clearer name without leaving the projects
+                page.
               </DialogDescription>
             </DialogHeader>
 
@@ -400,27 +411,39 @@ function ProjectFolderCard({ project, canvasCount }: ProjectFolderCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete project?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove <span className="font-medium text-foreground">{project.name}</span>.
-              If there are linked records that block deletion, we will keep the project and show the
-              database error instead.
+              This will remove{" "}
+              <span className="font-medium text-foreground">
+                {project.name}
+              </span>
+              . If there are linked records that block deletion, we will keep
+              the project and show the database error instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="px-6 pb-2 text-sm text-muted-foreground">
             <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/30 p-3">
               <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
-              <span>This action is intended to be destructive and cannot be silently undone.</span>
+              <span>
+                This action is intended to be destructive and cannot be silently
+                undone.
+              </span>
             </div>
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogClose render={<Button variant="outline">Cancel</Button>} />
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <AlertDialogClose
+              render={<Button variant="outline">Cancel</Button>}
+            />
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
               {isDeleting ? "Deleting..." : "Delete project"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

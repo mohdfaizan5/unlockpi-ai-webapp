@@ -143,9 +143,7 @@ function CanvasCardActions({
               <DrawerMenuGroup>
                 <DrawerMenuGroupLabel>Actions</DrawerMenuGroupLabel>
                 <DrawerClose
-                  render={
-                    <DrawerMenuItem onClick={() => void onRename()} />
-                  }
+                  render={<DrawerMenuItem onClick={() => void onRename()} />}
                 >
                   <PenLineIcon className="size-4" />
                   Rename
@@ -180,7 +178,9 @@ function CanvasCardActions({
                               key={project.id}
                               render={
                                 <DrawerMenuItem
-                                  disabled={isMoving || canvas.projectId === project.id}
+                                  disabled={
+                                    isMoving || canvas.projectId === project.id
+                                  }
                                   onClick={() => void onMove(project.id)}
                                 />
                               }
@@ -544,20 +544,22 @@ export function CanvasLibraryBrowser({
                 setTemplateError(null);
                 setIsTemplateDialogOpen(true);
               }}
-              className="flex h-24 w-64 items-center justify-between overflow-hidden rounded-2xl bg-card px-2 pl-4 text-left shadow-[inset_0_0_0_1px_var(--border)] transition-[transform,box-shadow,background-color] hover:bg-accent active:scale-[0.98]"
+              className="flex flex-col md:flex-row h-24 w-64 items-center justify-between overflow-hidden rounded-2xl bg-card px-2 pl-4 text-left shadow-[inset_0_0_0_1px_var(--border)] transition-[transform,box-shadow,background-color] hover:bg-accent active:scale-[0.98]"
             >
               <div className="min-w-0">
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-xs mt-4 md:mt-0 md:text-base font-semibold text-foreground">
                   {template.title}
                 </p>
               </div>
-              <Image
-                src={template.image}
-                alt={template.title}
-                width={126}
-                height={68}
-                className="rounded-lg"
-              />
+              <div className="w-32">
+                <Image
+                  src={template.image}
+                  alt={template.title}
+                  width={126}
+                  height={68}
+                  className="rounded-lg"
+                />
+              </div>
             </motion.button>
           ))}
         </motion.section>
@@ -567,7 +569,10 @@ export function CanvasLibraryBrowser({
         <CardFrameHeader>
           <CardFrameTitle>Existing canvases</CardFrameTitle>
           <CardFrameAction>
-            <Button variant="default" onClick={() => setIsTemplateDialogOpen(true)}>
+            <Button
+              variant="default"
+              onClick={() => setIsTemplateDialogOpen(true)}
+            >
               <PlusIcon className="size-4" />
               New canvas
             </Button>
@@ -628,23 +633,23 @@ export function CanvasLibraryBrowser({
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
-                <Empty>
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <FolderIcon />
-                    </EmptyMedia>
-                    <EmptyTitle>
-                      {projectContext
-                        ? "No canvases in this project yet"
-                        : "No canvases yet"}
-                    </EmptyTitle>
-                    <EmptyDescription>
-                      {projectContext
-                        ? "Use New canvas to add the first teaching canvas to this project."
-                        : "Pick one of the templates above to create your first teaching canvas."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <FolderIcon />
+                      </EmptyMedia>
+                      <EmptyTitle>
+                        {projectContext
+                          ? "No canvases in this project yet"
+                          : "No canvases yet"}
+                      </EmptyTitle>
+                      <EmptyDescription>
+                        {projectContext
+                          ? "Use New canvas to add the first teaching canvas to this project."
+                          : "Pick one of the templates above to create your first teaching canvas."}
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </motion.div>
               )}
             </motion.div>

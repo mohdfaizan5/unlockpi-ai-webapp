@@ -120,7 +120,7 @@ export function TraversalTrigger({
         Reset
       </button>
       {reachedTarget ? (
-        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+        <span className="text-xs font-semibold text-success">
           Target found at index {traversalTarget}.
         </span>
       ) : null}

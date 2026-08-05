@@ -60,6 +60,7 @@ import {
   canvasTypographyOptions,
   getCanvasThemeStyle,
 } from "@/features/canvas/lib/canvas-theme";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const beatLabels: Record<SlideBlockProps["teachingBeat"], string> = {
   hook: "Hook",
@@ -227,41 +228,42 @@ function SlideBlock({
           </DrawerPopup>
         </Drawer>
       </div>
-
       <section
         aria-label={`${label}: ${title}`}
         title={notes}
         className="flex min-h-[560px] min-w-0 w-full flex-col gap-5 rounded-lg border border-border bg-background p-4 text-foreground shadow-[0_22px_70px_var(--canvas-shadow-color)] sm:p-5 lg:p-7"
       >
-        <Content
-          allow={[
-            "HeadingTextBlock",
-            "SubheadingTextBlock",
-            "BodyTextBlock",
-            "ArrayBlock",
-            "StackBlock",
-            "QueueBlock",
-            "LinkedListBlock",
-            "MindMapBlock",
-            "CodeBlock",
-            "MermaidBlock",
-            "TableBlock",
-            "CheckpointBlock",
-            "SketchBlock",
-          ]}
-          className="grid min-h-[470px] min-w-0 flex-1 content-start gap-4 rounded-lg border border-dashed border-border/70 bg-muted/10 p-3 sm:p-4"
-        />
-        <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-          <span>Made with</span>
-          <Logo
-            isLink={false}
-            width={18}
-            height={18}
-            className="rounded-full bg-background/70"
+        <ScrollArea className=" rounded-md border">
+          <Content
+            allow={[
+              "HeadingTextBlock",
+              "SubheadingTextBlock",
+              "BodyTextBlock",
+              "ArrayBlock",
+              "StackBlock",
+              "QueueBlock",
+              "LinkedListBlock",
+              "MindMapBlock",
+              "CodeBlock",
+              "MermaidBlock",
+              "TableBlock",
+              "CheckpointBlock",
+              "SketchBlock",
+            ]}
+            className="grid min-h-[470px] min-w-0 flex-1 content-start gap-4 rounded-lg border border-dashed border-border/70 bg-muted/10 p-3 sm:p-4"
           />
-          <span>UnlockPi</span>
-        </div>
-      </section>
+          <div className="h-10 flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+            <span>Made with</span>
+            <Logo
+              isLink={false}
+              width={18}
+              height={18}
+              className="rounded-full bg-background/70"
+            />
+            <span>UnlockPi</span>
+          </div>
+        </ScrollArea>
+      </section>{" "}
     </article>
   );
 }
@@ -581,13 +583,13 @@ function TableBlock({ title, columns, rows, caption }: TableBlockProps) {
 
 function CheckpointBlock({ question, answer }: CheckpointBlockProps) {
   return blockShell(
-    "border-emerald-500/30 bg-emerald-500/5",
+    "border-success/30 bg-success/5",
     <div className="grid gap-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-success">
         Checkpoint
       </p>
       <h3 className="text-lg font-semibold tracking-tight">{question}</h3>
-      <p className="rounded-lg border border-emerald-500/20 bg-background/72 p-3 text-sm text-muted-foreground">
+      <p className="rounded-lg border border-success/20 bg-background/72 p-3 text-sm text-muted-foreground">
         {answer}
       </p>
     </div>,

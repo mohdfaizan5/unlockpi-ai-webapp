@@ -12,7 +12,7 @@ export function ConnectionScreen({ connect, isConnecting, error }: ConnectionScr
     return (
         <div className="flex flex-col items-center  gap-3 relative z-10 mb-20">
             {error && (
-                <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+                <div className="text-destructive text-sm bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-2">
                     {error}
                 </div>
             )} 

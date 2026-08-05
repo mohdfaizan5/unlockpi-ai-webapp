@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
+import { AdminShell } from "@/features/admin/components/admin-shell";
 import { createClient } from "@/lib/server";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
@@ -25,5 +26,5 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   await supabase.rpc("touch_user_activity");
 
-  return children;
+  return <AdminShell>{children}</AdminShell>;
 }

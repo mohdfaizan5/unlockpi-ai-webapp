@@ -101,7 +101,7 @@ export function CanvasEditorScreen({ model }: CanvasEditorScreenProps) {
               className="canvas-preview-pane min-h-0 overflow-hidden bg-background"
               style={getCanvasAppThemeVars(controller.isLightTheme)}
             >
-              <ScrollArea className="h-full min-h-0" scrollFade scrollbarGutter>
+              <ScrollArea className="h-full min-h-screen" scrollFade scrollbarGutter>
                 <div
                   className="box-border min-h-full py-4"
                   onClick={controller.actions.handleFrameChromeAction}

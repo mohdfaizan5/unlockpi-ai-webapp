@@ -36,6 +36,16 @@ export type CanvasRealtimeAction = {
   values?: string[];
 };
 
+/** Actions that move between frames — the only ones allowed to narrate-and-advance. */
+const NAVIGATION_ACTIONS = new Set<CanvasRealtimeAction["action"]>([
+  "next",
+  "previous",
+  "first",
+  "last",
+  "goto",
+  "find",
+]);
+
 export type CanvasRealtimeStatus =
   | "idle"
   | "connecting"
@@ -218,6 +228,22 @@ export function useCanvasRealtimeSession({
     [sendEvent],
   );
 
+  /**
+   * Brief, generic acknowledgment for content actions (array edits/highlights)
+   * — never a frame-navigation instruction. Kept separate from
+   * narrateCurrentFrame so array tweaks can't accidentally trigger "go to the
+   * next frame."
+   */
+  const acknowledgeContentAction = useCallback(() => {
+    sendEvent({
+      type: "response.create",
+      response: {
+        instructions:
+          "Briefly acknowledge the visual change in one short sentence, then continue helping the teacher.",
+      },
+    });
+  }, [sendEvent]);
+
   /** Accumulate the AI's spoken/written words into the live caption. */
   const appendCaption = useCallback((delta: string) => {
     if (captionTimerRef.current) {
@@ -249,34 +275,49 @@ export function useCanvasRealtimeSession({
         try {
           const action = JSON.parse(call.arguments) as CanvasRealtimeAction;
           const currentState = onActionRef.current(action);
-          const frameLine = currentState.split("\n")[0];
           sendToolOutput(
             call.call_id,
             JSON.stringify({ ok: true, current_state: currentState }),
           );
 
-          // If a walkthrough is running and we've reached the last frame, stop
-          // pacing so the model wraps up instead of looping forever.
-          const inWalkthrough = walkthroughRef.current !== null;
-          const frameNumber = parseFrameNumber(currentState);
-          if (
-            inWalkthrough &&
-            frameNumber !== null &&
-            frameNumber >= walkthroughRef.current!.toFrame
-          ) {
-            walkthroughRef.current = null;
-          }
+          // This is the fix for the "diagram keeps rerendering" bug: only
+          // NAVIGATION actions may narrate-and-advance. Content actions
+          // (highlight/set/resize/add array) used to fall through the same
+          // path, which meant a walkthrough's "call next" instruction fired
+          // after every array tweak too — so the AI kept flipping frames back
+          // to back any time it touched an array mid-walkthrough.
+          if (NAVIGATION_ACTIONS.has(action.action)) {
+            const frameLine = currentState.split("\n")[0];
+            const inWalkthrough = walkthroughRef.current !== null;
+            const frameNumber = parseFrameNumber(currentState);
 
-          setActivity(
-            inWalkthrough
-              ? { kind: "walkthrough", label: frameLine }
-              : { kind: "navigating", label: frameLine },
-          );
+            // If a walkthrough is running and we've reached the last frame,
+            // stop pacing so the model wraps up instead of looping forever.
+            if (
+              inWalkthrough &&
+              frameNumber !== null &&
+              frameNumber >= walkthroughRef.current!.toFrame
+            ) {
+              walkthroughRef.current = null;
+            }
 
-          // Narrate the shown frame in a walkthrough (either mode), or after
-          // any nav in Co-teacher mode. Copilot stays silent otherwise.
-          if (inWalkthrough || modeRef.current === "companion") {
-            narrateCurrentFrame(frameLine, inWalkthrough);
+            setActivity(
+              inWalkthrough
+                ? { kind: "walkthrough", label: frameLine }
+                : { kind: "navigating", label: frameLine },
+            );
+
+            // Narrate the shown frame in a walkthrough (either mode), or
+            // after any nav in Co-teacher mode. Copilot stays silent
+            // otherwise.
+            if (inWalkthrough || modeRef.current === "companion") {
+              narrateCurrentFrame(frameLine, inWalkthrough);
+            }
+          } else if (modeRef.current === "companion") {
+            // Content action (array edit/highlight) — a brief generic ack
+            // only. Never a navigation instruction, so it can't advance
+            // frames on its own.
+            acknowledgeContentAction();
           }
         } catch {
           sendToolOutput(
@@ -346,7 +387,7 @@ export function useCanvasRealtimeSession({
         }
       }
     },
-    [narrateCurrentFrame, sendToolOutput],
+    [acknowledgeContentAction, narrateCurrentFrame, sendToolOutput],
   );
 
   const handleServerEvent = useCallback(
@@ -386,7 +427,6 @@ export function useCanvasRealtimeSession({
       }
 
       if (event.type === "response.done") {
-        trackRealtimeResponse(usageSessionIdRef.current, event.response);
         // Let the finished caption linger, then fade. A new response's deltas
         // clear this timer and start a fresh caption.
         captionBufferRef.current = "";
@@ -463,10 +503,38 @@ export function useCanvasRealtimeSession({
       const dataChannel = peerConnection.createDataChannel("oai-events");
       dataChannelRef.current = dataChannel;
       dataChannel.addEventListener("message", (event) => {
+        let parsed: RealtimeServerEvent;
         try {
-          handleServerEvent(JSON.parse(event.data) as RealtimeServerEvent);
+          parsed = JSON.parse(event.data) as RealtimeServerEvent;
         } catch {
-          // Ignore malformed diagnostic events from the transport.
+          return; // Genuinely malformed transport frame — nothing to do.
+        }
+
+        // Record token usage BEFORE any other handler runs.
+        //
+        // This ordering is load-bearing: `response.done` carries the model's
+        // function calls in `response.output`, and dispatching those runs real
+        // app code (canvas mutations, panel generation) that can throw. When
+        // it did, the old catch-all swallowed the error AND skipped cost
+        // tracking entirely — a session could burn real money and record
+        // nothing, with no trace anywhere. Usage capture must never sit
+        // downstream of code that can fail.
+        if (parsed.type === "response.done") {
+          try {
+            trackRealtimeResponse(usageSessionIdRef.current, parsed.response);
+          } catch (usageError) {
+            console.error("[realtime usage] tracking threw:", usageError);
+          }
+        }
+
+        try {
+          handleServerEvent(parsed);
+        } catch (handlerError) {
+          // Never silent: a throw here previously vanished without a trace.
+          console.error(
+            `[realtime] handler failed for event "${parsed.type}":`,
+            handlerError,
+          );
         }
       });
       dataChannel.addEventListener("open", () => setStatus("connected"));
