@@ -30,6 +30,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { canvasPuckConfig } from "@/features/canvas/components/canvas-puck-config";
 import { CopilotPanel } from "@/features/canvas/components/copilot-panel";
 import {
@@ -563,14 +564,14 @@ function RealtimeControls({
   return (
     <div className="mr-1 flex items-center gap-1">
       {!session.isConnected ? (
-        <Button
-          size="sm"
-          disabled={session.status === "connecting"}
-          onClick={() => void session.connect()}
-        >
-          <PowerIcon aria-hidden="true" />
-          {session.status === "connecting" ? "Connecting" : "Connect AI"}
-        </Button>
+        session.status === "connecting" ? (
+          <Spinner className="size-5 text-primary" aria-label="Connecting" />
+        ) : (
+          <Button size="sm" onClick={() => void session.connect()}>
+            <PowerIcon aria-hidden="true" />
+            Connect AI
+          </Button>
+        )
       ) : (
         <>
           <Button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useTheme } from "next-themes";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -40,6 +40,7 @@ import type {
   CanvasDocument,
   CanvasThemeId,
   CanvasTypographyScale,
+  SketchSceneData,
 } from "@/features/canvas/types/canvas-types";
 import { toastManager } from "@/components/ui/toast";
 
@@ -59,6 +60,14 @@ export function useCanvasEditorController(
   );
   const [isPublic, setIsPublic] = useState(model.canvas.isPublic ?? false);
   const [puckRevision, setPuckRevision] = useState(0);
+  // Lives here, above the `<Puck key={puckRevision}>` remount boundary, so a
+  // theme change or AI action (both bump puckRevision to force-remount Puck)
+  // doesn't wipe out an unsaved drawing sitting in the Draw panel scratchpad.
+  const sketchSceneRef = useRef<SketchSceneData | null>(null);
+  const getSketchScene = useCallback(() => sketchSceneRef.current, []);
+  const setSketchScene = useCallback((next: SketchSceneData) => {
+    sketchSceneRef.current = next;
+  }, []);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isStartClassOpen, setIsStartClassOpen] = useState(false);
   const [presentationMode, setPresentationMode] = useState<
@@ -420,6 +429,7 @@ export function useCanvasEditorController(
       handleCanvasTitleChange,
       handleCreatePublicLink,
       handleFrameChromeAction,
+      getSketchScene,
       handlePuckChange,
       persistCanvas,
       runJsonCommand,
@@ -431,6 +441,7 @@ export function useCanvasEditorController(
       setIsTitleEditing,
       setLeftPanelView,
       setPresentationMode,
+      setSketchScene,
       setToolPanelOpen,
       updateCanvasAppearance,
       toggleTheme,

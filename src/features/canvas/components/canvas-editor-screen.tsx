@@ -81,8 +81,10 @@ export function CanvasEditorScreen({ model }: CanvasEditorScreenProps) {
               actionLog={controller.actionLog}
               actions={{
                 applyAction: controller.actions.applyAction,
+                getSketchScene: controller.actions.getSketchScene,
                 runJsonCommand: controller.actions.runJsonCommand,
                 setCommandDraft: controller.actions.setCommandDraft,
+                setSketchScene: controller.actions.setSketchScene,
                 updateCanvasAppearance:
                   controller.actions.updateCanvasAppearance,
               }}
