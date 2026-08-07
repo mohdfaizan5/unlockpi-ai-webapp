@@ -32,7 +32,10 @@ import { MermaidDiagram } from "@/features/talk/components/renderers/mermaid-dia
 import { TraversalTrigger } from "@/features/canvas/components/traversal-trigger";
 import { useTraversalState } from "@/features/canvas/hooks/use-traversal-state";
 import { SketchBlock } from "@/features/canvas/components/sketch-block";
-import { sketchWidthOptions } from "@/features/canvas/lib/sketch-sizes";
+import {
+  DEFAULT_SKETCH_WIDTH_PERCENT,
+  sketchWidthOptions,
+} from "@/features/canvas/lib/sketch-sizes";
 import { readPendingSketch } from "@/features/canvas/lib/sketch-transfer";
 import type {
   ArrayBlockProps,
@@ -1013,7 +1016,7 @@ export const canvasPuckConfig: Config<CanvasComponents, CanvasRootProps> = {
       defaultProps: {
         title: "",
         caption: "",
-        widthPercent: 100,
+        widthPercent: DEFAULT_SKETCH_WIDTH_PERCENT,
         src: "",
         aspectRatio: 1.6,
       },

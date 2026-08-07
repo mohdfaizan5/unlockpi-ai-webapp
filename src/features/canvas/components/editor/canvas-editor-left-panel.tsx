@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   BracesIcon,
   CheckIcon,
@@ -25,7 +25,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { CanvasComponentPalette } from "@/features/canvas/components/editor/canvas-component-palette";
 import { CanvasSketchPad } from "@/features/canvas/components/editor/canvas-sketch-pad";
-import type { SketchSceneData } from "@/features/canvas/types/canvas-types";
 import {
   leftPanelCopy,
   quickCommands,
@@ -61,8 +60,10 @@ type CanvasEditorLeftPanelProps = {
   actions: Pick<
     CanvasEditorController["actions"],
     | "applyAction"
+    | "getSketchScene"
     | "runJsonCommand"
     | "setCommandDraft"
+    | "setSketchScene"
     | "updateCanvasAppearance"
   >;
 };
@@ -81,10 +82,6 @@ export function CanvasEditorLeftPanel({
 }: CanvasEditorLeftPanelProps) {
   const [homeTab, setHomeTab] = useState<HomeTab>("blocks");
   const [boardOpen, setBoardOpen] = useState(false);
-  // A ref, not state: the pad reports every edit here, and re-rendering on each
-  // one would send Excalidraw into an update loop. Reading it when a pad mounts
-  // is enough to carry the scratchpad between the panel and the modal.
-  const sketchScene = useRef<SketchSceneData | null>(null);
 
   return (
     <motion.aside
@@ -177,10 +174,8 @@ export function CanvasEditorLeftPanel({
                   <CanvasSketchPad
                     activeFrameId={activeSlideId}
                     frames={frames}
-                    getInitialScene={() => sketchScene.current}
-                    onSceneChange={(next) => {
-                      sketchScene.current = next;
-                    }}
+                    getInitialScene={actions.getSketchScene}
+                    onSceneChange={actions.setSketchScene}
                   />
                 </div>
               )}
@@ -420,12 +415,10 @@ export function CanvasEditorLeftPanel({
               <CanvasSketchPad
                 activeFrameId={activeSlideId}
                 frames={frames}
-                getInitialScene={() => sketchScene.current}
+                getInitialScene={actions.getSketchScene}
                 showDragHandle={false}
                 onAdded={() => setBoardOpen(false)}
-                onSceneChange={(next) => {
-                  sketchScene.current = next;
-                }}
+                onSceneChange={actions.setSketchScene}
               />
             ) : null}
           </div>

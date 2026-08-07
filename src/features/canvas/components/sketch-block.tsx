@@ -1,12 +1,13 @@
 "use client";
 
+import { DEFAULT_SKETCH_WIDTH_PERCENT } from "@/features/canvas/lib/sketch-sizes";
 import type { SketchBlockProps } from "@/features/canvas/types/canvas-types";
 import { cn } from "@/lib/utils";
 
 export function SketchBlock({
   title,
   caption,
-  widthPercent = 100,
+  widthPercent = DEFAULT_SKETCH_WIDTH_PERCENT,
   src,
   aspectRatio = 1.6,
 }: SketchBlockProps) {

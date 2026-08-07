@@ -9,6 +9,7 @@ import type {
   CanvasTemplateKey,
   CanvasThemeId,
   CanvasTypographyScale,
+  SketchSceneData,
 } from "@/features/canvas/types/canvas-types";
 import type { TeachingProject } from "@/features/project/types/project-types";
 
@@ -140,6 +141,14 @@ export type CanvasEditorController = {
       React.SetStateAction<CanvasPresentationMode | null>
     >;
     setToolPanelOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    /**
+     * Draw-panel scratchpad, read/written as a ref rather than state: it must
+     * outlive the `<Puck key={puckRevision}>` remount that theme changes and AI
+     * actions trigger, and re-rendering the controller on every stroke would be
+     * far too hot a path.
+     */
+    getSketchScene: () => SketchSceneData | null;
+    setSketchScene: (next: SketchSceneData) => void;
     toggleTheme: () => void;
     updateCanvasAppearance: (appearance: Partial<{
       theme: CanvasThemeId;

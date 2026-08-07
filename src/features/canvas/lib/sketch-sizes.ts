@@ -9,4 +9,4 @@ export const sketchWidthOptions: Array<{ label: string; value: number }> = [
   { label: "100%", value: 100 },
 ];
 
-export const DEFAULT_SKETCH_WIDTH_PERCENT = 100;
+export const DEFAULT_SKETCH_WIDTH_PERCENT = 25;
