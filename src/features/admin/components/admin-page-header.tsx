@@ -19,9 +19,9 @@ export function AdminPageHeader({
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-0">
         {Icon ? (
-          <span className="grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground">
+          <span className="grid size-9 place-items-center text-muted-foreground">
             <Icon className="size-4.5" aria-hidden="true" />
           </span>
         ) : null}

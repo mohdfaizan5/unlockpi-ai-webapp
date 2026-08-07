@@ -5,7 +5,7 @@
 - Summary: Cleared the last production build blocker and kept the temp MDX playground shipping as a plain TSX page.
 
 ## What changed
-
+AKIAIOSFODNN7EXAMPLE
 - Converted the `/dashboard/mdx` temp route from MDX to TSX so Next.js production builds no longer fail during page data collection.
 - Kept the temp playground content available with the same sample heading, callout, Mermaid, and table content.
 - Verified the full app now passes `bunx tsc --noEmit` and `bun run build` locally.

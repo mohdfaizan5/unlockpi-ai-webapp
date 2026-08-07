@@ -6,15 +6,18 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { SearchIcon, ShieldCheckIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { DataTable } from "@/features/admin/components/data-table";
+import {
+  ADMIN_AVATAR_FALLBACK_CLASS,
+  AdminDataTable,
+} from "@/features/admin/components/admin-data-table";
 import {
   formatCost,
   formatNumber,
   formatRelative,
   initialsOf,
 } from "@/features/admin/lib/format";
+import { ADMIN_PAGE_SIZE } from "@/features/admin/lib/admin-pagination";
 import type { UserStats } from "@/features/admin/lib/user-stats";
 import type { AdminUser } from "@/features/admin/types/admin-types";
 
@@ -23,14 +26,18 @@ type UserRow = AdminUser & UserStats;
 export function UsersTable({
   users,
   statsByUser,
+  page,
 }: {
   users: AdminUser[];
   statsByUser: Record<string, UserStats>;
+  page: number;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  const rows = useMemo<UserRow[]>(() => {
+  // Search filters the full list client-side, then we slice the page from the
+  // result so searching doesn't strand you on an out-of-range page.
+  const allRows = useMemo<UserRow[]>(() => {
     const query = search.trim().toLowerCase();
     return users
       .filter((user) =>
@@ -49,6 +56,12 @@ export function UsersTable({
       }));
   }, [users, statsByUser, search]);
 
+  const effectivePage = search.trim() ? 1 : page;
+  const pageRows = useMemo(() => {
+    const from = (effectivePage - 1) * ADMIN_PAGE_SIZE;
+    return allRows.slice(from, from + ADMIN_PAGE_SIZE);
+  }, [allRows, effectivePage]);
+
   const columns = useMemo<ColumnDef<UserRow>[]>(
     () => [
       {
@@ -56,18 +69,15 @@ export function UsersTable({
         header: "Tutor",
         cell: ({ row }) => (
           <div className="flex items-center gap-2.5">
-            <Avatar>
+            <Avatar className="size-8 shrink-0 text-xs">
               <AvatarImage
-                alt="Luke Tracy"
-                src="https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?w=128&h=128&dpr=2&q=80"
+                src={row.original.avatarUrl ?? undefined}
+                alt={row.original.name}
               />
-              <AvatarFallback> {initialsOf(row.original.name)}</AvatarFallback>
-            </Avatar>
-            {/* <Avatar className="size-8 shrink-0 text-xs">
-              <AvatarFallback className="bg-primary/12 font-semibold text-primary">
+              <AvatarFallback className={ADMIN_AVATAR_FALLBACK_CLASS}>
                 {initialsOf(row.original.name)}
               </AvatarFallback>
-            </Avatar> */}
+            </Avatar>
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 truncate font-medium">
                 {row.original.name}
@@ -137,16 +147,15 @@ export function UsersTable({
           className="pl-9"
         />
       </div>
-      {rows.length === 0 && users.length > 0 ? (
-        <Badge variant="secondary">
-          No tutors match &ldquo;{search}&rdquo;
-        </Badge>
-      ) : null}
-      <DataTable
+      <AdminDataTable
         columns={columns}
-        data={rows}
-        pageSize={12}
-        emptyLabel="No tutors yet."
+        data={pageRows}
+        page={effectivePage}
+        pageSize={ADMIN_PAGE_SIZE}
+        total={allRows.length}
+        emptyLabel={
+          search.trim() ? `No tutors match "${search}"` : "No tutors yet."
+        }
         onRowClick={(user) => router.push(`/admin/users/${user.id}`)}
       />
     </div>

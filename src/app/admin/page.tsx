@@ -82,7 +82,15 @@ export default async function AdminOverviewPage({
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Recent sessions
         </p>
-        <SessionsTable sessions={sessions.slice(0, 10)} users={data.users} />
+        {/* Overview shows a fixed "latest 10" preview — the full paginated
+            list lives on /admin/sessions. */}
+        <SessionsTable
+          sessions={sessions.slice(0, 10)}
+          users={data.users}
+          page={1}
+          pageSize={10}
+          total={Math.min(sessions.length, 10)}
+        />
       </div>
     </>
   );
