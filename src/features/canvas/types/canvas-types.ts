@@ -136,10 +136,10 @@ export type SketchPayload = {
 };
 
 export type SketchBlockProps = {
-  title: string;
-  caption: string;
   /** Rendered width as a percentage of the frame column. */
   widthPercent: number;
+  /** Not shown on the board — description the AI tutor uses to understand the drawing. */
+  aiContext: string;
   src?: string;
   aspectRatio?: number;
 };

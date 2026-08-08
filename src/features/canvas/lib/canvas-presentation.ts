@@ -92,7 +92,10 @@ function collectSearchText(value: unknown): string {
 
   if (value && typeof value === "object") {
     return Object.entries(value)
-      .filter(([key]) => key !== "id")
+      // `src` is a base64 image data URI (SketchBlock) — including it here
+      // would flood the model's truncated context budget with junk and push
+      // out the actually-useful text, e.g. the drawing's aiContext.
+      .filter(([key]) => key !== "id" && key !== "src")
       .map(([, child]) => collectSearchText(child))
       .join(" ");
   }
