@@ -283,12 +283,16 @@ function InspectorTextareaField({
     fieldId.endsWith(".code") ||
     fieldId.endsWith(".chart");
 
+  const placeholder =
+    field && "placeholder" in field ? field.placeholder : undefined;
+
   return (
     <Textarea
       id={id}
       disabled={readOnly}
       value={typeof value === "string" ? value : ""}
       onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
       spellCheck={isCodeEditor ? false : undefined}
       className={cn(
         "min-h-28",

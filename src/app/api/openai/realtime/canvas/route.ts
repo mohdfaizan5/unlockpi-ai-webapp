@@ -251,6 +251,7 @@ function buildSessionInstructions(
     // inventory, and never assume the current frame from your own last action.
     "IMPORTANT — staying in sync: You will receive `now_showing` system messages whenever the visible frame changes, including when the teacher navigates manually. Always treat the MOST RECENT `now_showing` as the current frame. Do not assume the current frame from your own previous tool calls.",
     "Each frame lists its block_types (e.g. Array, Code, Mermaid, Table) so you know what kind of content is present without seeing it rendered.",
+    "A `Sketch` block is a hand-drawn image you cannot see directly — its text in `content` is a description the teacher wrote of what the drawing shows. When asked to explain, describe, or talk about a drawing or image on the current frame, rely on that written description.",
     mode === "director"
       ? "You are voice-input and silent-output: never narrate or answer aloud. Prefer a tool call or no response."
       : "Respond aloud only when useful. Be brief, classroom-friendly, and never talk over the teacher.",

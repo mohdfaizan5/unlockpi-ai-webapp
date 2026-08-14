@@ -28,13 +28,18 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { AgentState } from "@livekit/components-react";
+import type { RemoteAudioTrack } from "livekit-client";
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { canvasPuckConfig } from "@/features/canvas/components/canvas-puck-config";
 import { CopilotPanel } from "@/features/canvas/components/copilot-panel";
+import { AgentAudioVisualizerWave } from "@/features/talk/components/agent-audio-visualizer-wave";
 import {
   type CanvasRealtimeAction,
+  type CanvasRealtimeStatus,
+  type RealtimeActivity,
   useCanvasRealtimeSession,
 } from "@/features/canvas/hooks/use-canvas-realtime-session";
 import { useCopilotPanel } from "@/features/canvas/hooks/use-copilot-panel";
@@ -212,8 +217,26 @@ export function CanvasPresenter({
     activity: aiActivity,
     caption: aiCaption,
     isConnected: aiConnected,
+    remoteAudioStream,
+    status: aiStatus,
     syncFrameContext,
   } = realtimeSession;
+
+  // `AgentAudioVisualizerWave` drives its "speaking" amplitude from LiveKit's
+  // `useTrackVolume`, which only ever reads `.mediaStream` and
+  // `.mediaStreamTrack` off the track (verified in the bundle). A minimal shim
+  // over the raw WebRTC stream satisfies it without constructing a full LiveKit
+  // RemoteAudioTrack — that's what makes the wave move with the actual voice.
+  const aiAudioTrack = useMemo(() => {
+    const track = remoteAudioStream?.getAudioTracks()[0];
+    if (!remoteAudioStream || !track) {
+      return undefined;
+    }
+    return {
+      mediaStream: remoteAudioStream,
+      mediaStreamTrack: track,
+    } as unknown as RemoteAudioTrack;
+  }, [remoteAudioStream]);
   const [captionsOn, setCaptionsOn] = useState(true);
 
   // Give the AI sight: every time the visible frame changes — whether the
@@ -453,6 +476,30 @@ export function CanvasPresenter({
             goTo(activeIndex + (distance < 0 ? 1 : -1));
           }}
         >
+          {aiConnected ? (
+            // Anchored inside `main` (not the outer presenter) so it shares the
+            // same box the frame card centers in — when the Copilot panel opens
+            // and narrows `main`, both move together instead of drifting into
+            // each other. `main`'s overflow-hidden also clips it from ever
+            // reaching into the panel. z-0, below the frame card's z-10, so the
+            // card visually wins any overlap rather than drawing over it.
+            //
+            // The panel eats into main's width, so the wave itself shrinks
+            // (xl -> sm) rather than relying on overflow-hidden to crop it —
+            // clipping read as a cut-off shape, not a resize.
+            <div className="pointer-events-none absolute left-4 top-1/2 z-0 -translate-y-1/2">
+              <AgentAudioVisualizerWave
+                size={panelOpen ? "sm" : "xl"}
+                color="#ff0d00"
+                colorShift={0.06}
+                lineWidth={1.8}
+                state={toAgentVisualizerState(aiStatus, aiActivity)}
+                audioTrack={aiAudioTrack}
+                className="mx-auto aspect-square size-auto h-full transition-[height,width] duration-300 ease-out"
+              />
+            </div>
+          ) : null}
+
           <div
             key={activeFrame.id}
             className={cn(
@@ -695,6 +742,36 @@ function FrameOverview({
       </div>
     </div>
   );
+}
+
+/**
+ * `AgentAudioVisualizerWave` and its animation hook take a LiveKit `AgentState`
+ * purely as a prop — they don't call `useAgent()` or read from a LiveKit Room
+ * themselves, so they work here even though this session is an OpenAI
+ * Realtime WebRTC connection with no LiveKit room in the tree. This just maps
+ * our own connection status/activity onto that same state vocabulary.
+ */
+function toAgentVisualizerState(
+  status: CanvasRealtimeStatus,
+  activity: RealtimeActivity | null,
+): AgentState {
+  if (status === "connecting") return "connecting";
+  if (status === "error") return "failed";
+  if (status === "idle") return "disconnected";
+
+  // status is "connected" or "paused" here.
+  if (!activity) return "idle";
+
+  switch (activity.kind) {
+    case "listening":
+      return "listening";
+    case "generating":
+    case "navigating":
+      return "thinking";
+    case "explaining":
+    case "walkthrough":
+      return "speaking";
+  }
 }
 
 function activityVerb(kind: NonNullable<ReturnType<typeof useCanvasRealtimeSession>["activity"]>["kind"]) {

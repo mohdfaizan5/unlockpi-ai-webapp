@@ -2,7 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 let sequence = 0;
+
+/**
+ * Loosely evokes a flowchart (node -> decision -> two branches) rather than a
+ * generic loading block, since we don't know the real chart's shape until
+ * mermaid finishes parsing it.
+ */
+function MermaidSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Rendering diagram"
+      className="my-4 flex flex-col items-center gap-2 rounded-lg border border-(--color-darker-gray) bg-(--color-darkest-gray)/70 p-6"
+    >
+      <Skeleton className="h-9 w-28 rounded-lg" />
+      <Skeleton className="h-4 w-px" />
+      <Skeleton className="h-9 w-36 rounded-lg" />
+      <div className="flex gap-10">
+        <Skeleton className="h-4 w-px" />
+        <Skeleton className="h-4 w-px" />
+      </div>
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-9 w-24 rounded-lg" />
+        <Skeleton className="h-9 w-24 rounded-lg" />
+      </div>
+    </div>
+  );
+}
 
 interface MdxMermaidProps {
   chart: string;
@@ -12,11 +41,49 @@ export function MdxMermaid({ chart }: MdxMermaidProps) {
   const idRef = useRef(`mdx-mermaid-${++sequence}`);
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  // TEMP DIAGNOSTIC — remove alongside the logs below.
+  const previousChartRef = useRef<string | null>(null);
+  const renderCountRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     setSvg("");
     setError(null);
+
+    // TEMP DIAGNOSTIC — remove once the repeated-render report is resolved.
+    // Exact equality against the last chart this same instance saw, since a
+    // truncated preview can't rule out a difference past character 40.
+    renderCountRef.current += 1;
+    const identicalToPrevious = previousChartRef.current === chart;
+    let firstDiffIndex = -1;
+    if (previousChartRef.current !== null && !identicalToPrevious) {
+      const prev = previousChartRef.current;
+      const maxLen = Math.max(prev.length, chart.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (prev[i] !== chart[i]) {
+          firstDiffIndex = i;
+          break;
+        }
+      }
+    }
+    console.log("[mermaid] effect fired", {
+      instanceId: idRef.current,
+      firingNumber: renderCountRef.current,
+      chartLength: chart.length,
+      identicalToPreviousChart: previousChartRef.current === null ? "n/a (first firing)" : identicalToPrevious,
+      firstDiffIndex,
+      contextAroundDiff:
+        firstDiffIndex >= 0
+          ? {
+              previous: previousChartRef.current?.slice(
+                Math.max(0, firstDiffIndex - 15),
+                firstDiffIndex + 15,
+              ),
+              current: chart.slice(Math.max(0, firstDiffIndex - 15), firstDiffIndex + 15),
+            }
+          : undefined,
+    });
+    previousChartRef.current = chart;
 
     async function render() {
       try {
@@ -66,6 +133,8 @@ export function MdxMermaid({ chart }: MdxMermaidProps) {
 
     return () => {
       cancelled = true;
+      // TEMP DIAGNOSTIC — remove alongside the log above.
+      console.log("[mermaid] effect cleanup", { instanceId: idRef.current });
       const stale = document.getElementById(idRef.current);
       if (stale) stale.remove();
     };
@@ -80,11 +149,7 @@ export function MdxMermaid({ chart }: MdxMermaidProps) {
   }
 
   if (!svg) {
-    return (
-      <div className="my-4 rounded-lg border border-(--color-darker-gray) bg-(--color-darkest-gray)/70 p-3 text-sm text-gray-300">
-        Rendering Mermaid diagram...
-      </div>
-    );
+    return <MermaidSkeleton />;
   }
 
   return (
