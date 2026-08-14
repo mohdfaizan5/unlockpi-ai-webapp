@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import type { Config, SlotComponent } from "@puckeditor/core";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -8,6 +8,7 @@ import {
   CopyIcon,
   MoreHorizontalIcon,
   PlusIcon,
+  SaveIcon,
   Trash2Icon,
 } from "lucide-react";
 import {
@@ -21,6 +22,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import Logo from "@/components/logo";
 import { ArrayStrip } from "@/components/data-structure/array-strip";
 import { LinkedListStrip } from "@/components/data-structure/linked-list-strip";
@@ -584,6 +587,56 @@ function TableBlock({ title, columns, rows, caption }: TableBlockProps) {
   );
 }
 
+/**
+ * Explicit-save inspector field for a drawing's AI context, instead of the
+ * usual autosave-on-keystroke textarea: this text is what the voice AI reads
+ * when a teacher asks it to explain the drawing, so a half-typed sentence
+ * shouldn't be live in that pipeline before the teacher is done writing it.
+ */
+function SketchContextField({
+  value,
+  onChange,
+  readOnly,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  readOnly?: boolean;
+}) {
+  const [draft, setDraft] = useState(value);
+  // Tracks the last `value` we've seen so an external change (undo/redo) can
+  // reset `draft` during render, without an effect that would cause an extra
+  // commit and risk clobbering an in-progress, unsaved edit on re-render.
+  const [lastSeenValue, setLastSeenValue] = useState(value);
+  if (value !== lastSeenValue) {
+    setLastSeenValue(value);
+    setDraft(value);
+  }
+  const isDirty = draft !== value;
+
+  return (
+    <div className="grid gap-2">
+      <Textarea
+        value={draft}
+        disabled={readOnly}
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder="Describe what this drawing shows, so the AI tutor understands it."
+        className="min-h-28"
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={readOnly || !isDirty}
+        onClick={() => onChange(draft)}
+        className="justify-self-start"
+      >
+        <SaveIcon className="size-3.5" />
+        {isDirty ? "Save" : "Saved"}
+      </Button>
+    </div>
+  );
+}
+
 function CheckpointBlock({ question, answer }: CheckpointBlockProps) {
   return blockShell(
     "border-success/30 bg-success/5",
@@ -1005,18 +1058,26 @@ export const canvasPuckConfig: Config<CanvasComponents, CanvasRootProps> = {
     SketchBlock: {
       label: "Drawing",
       fields: {
-        title: { type: "text", label: "Title" },
-        caption: { type: "textarea", label: "Caption" },
         widthPercent: {
           type: "select",
           label: "Width",
           options: sketchWidthOptions,
         },
+        aiContext: {
+          type: "custom",
+          label: "Image context for AI",
+          render: ({ value, onChange, readOnly }) => (
+            <SketchContextField
+              value={typeof value === "string" ? value : ""}
+              onChange={onChange}
+              readOnly={readOnly}
+            />
+          ),
+        },
       },
       defaultProps: {
-        title: "",
-        caption: "",
         widthPercent: DEFAULT_SKETCH_WIDTH_PERCENT,
+        aiContext: "",
         src: "",
         aspectRatio: 1.6,
       },

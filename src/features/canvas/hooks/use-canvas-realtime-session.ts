@@ -95,6 +95,12 @@ export function useCanvasRealtimeSession({
   const [error, setError] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
   const [activity, setActivity] = useState<RealtimeActivity | null>(null);
+  // The AI's remote audio, surfaced so the presenter's visualizer can react to
+  // the real voice. Only ever populated in companion mode — director mode is
+  // silent by design, so there is no track to expose there.
+  const [remoteAudioStream, setRemoteAudioStream] = useState<MediaStream | null>(
+    null,
+  );
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -107,6 +113,11 @@ export function useCanvasRealtimeSession({
   const usageSessionIdRef = useRef<string | null>(null);
   const captionBufferRef = useRef("");
   const captionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True between output_audio_buffer.started and .stopped — i.e. while the AI's
+  // voice is actually playing out, which outlives response.done (generation
+  // end). Gates caption/"speaking" teardown so the wave keeps reacting to the
+  // real voice until the agent has truly finished talking.
+  const audioPlaybackActiveRef = useRef(false);
   // Non-null while a guided walkthrough is running; holds the last frame in
   // range so we know when to stop pacing.
   const walkthroughRef = useRef<{ toFrame: number } | null>(null);
@@ -148,6 +159,7 @@ export function useCanvasRealtimeSession({
 
     handledCallIdsRef.current.clear();
     walkthroughRef.current = null;
+    audioPlaybackActiveRef.current = false;
     captionBufferRef.current = "";
     if (captionTimerRef.current) {
       clearTimeout(captionTimerRef.current);
@@ -155,6 +167,7 @@ export function useCanvasRealtimeSession({
     }
     setCaption("");
     setActivity(null);
+    setRemoteAudioStream(null);
     setError(null);
     setStatus("idle");
   }, []);
@@ -257,6 +270,23 @@ export function useCanvasRealtimeSession({
         ? previous
         : { kind: "explaining", label: "Explaining" },
     );
+  }, []);
+
+  /**
+   * Let the last caption linger `delayMs`, then clear it and drop the
+   * "explaining" activity (which returns the visualizer to idle). A walkthrough
+   * keeps its activity so pacing isn't interrupted.
+   */
+  const fadeCaption = useCallback((delayMs: number) => {
+    if (captionTimerRef.current) {
+      clearTimeout(captionTimerRef.current);
+    }
+    captionTimerRef.current = setTimeout(() => {
+      setCaption("");
+      setActivity((previous) =>
+        previous?.kind === "walkthrough" ? previous : null,
+      );
+    }, delayMs);
   }, []);
 
   const handleFunctionCall = useCallback(
@@ -423,23 +453,47 @@ export function useCanvasRealtimeSession({
       // answers them instead of ploughing ahead.
       if (event.type === "input_audio_buffer.speech_started") {
         walkthroughRef.current = null;
+        audioPlaybackActiveRef.current = false;
         setActivity({ kind: "listening", label: "Listening" });
       }
 
-      if (event.type === "response.done") {
-        // Let the finished caption linger, then fade. A new response's deltas
-        // clear this timer and start a fresh caption.
+      // The AI's voice began playing out to the room. Keep the caption and the
+      // "explaining"/"speaking" state pinned until playback actually stops.
+      if (event.type === "output_audio_buffer.started") {
+        audioPlaybackActiveRef.current = true;
+        if (captionTimerRef.current) {
+          clearTimeout(captionTimerRef.current);
+          captionTimerRef.current = null;
+        }
+        setActivity((previous) =>
+          previous?.kind === "walkthrough"
+            ? previous
+            : { kind: "explaining", label: "Explaining" },
+        );
+      }
+
+      // Playback finished — the agent has truly stopped talking. Now let the
+      // last caption linger briefly, then fade.
+      if (event.type === "output_audio_buffer.stopped") {
+        audioPlaybackActiveRef.current = false;
         captionBufferRef.current = "";
-        if (captionTimerRef.current) clearTimeout(captionTimerRef.current);
-        captionTimerRef.current = setTimeout(() => {
-          setCaption("");
-          setActivity((previous) =>
-            previous?.kind === "walkthrough" ? previous : null,
-          );
-        }, 4000);
+        fadeCaption(1200);
+      }
+
+      if (event.type === "response.done") {
+        captionBufferRef.current = "";
+        // Generation finished, but the voice is usually still playing. Only fade
+        // now when nothing is playing (director/text-only responses); otherwise
+        // output_audio_buffer.stopped owns the teardown so the caption and wave
+        // stay live until the agent has actually finished speaking. If the
+        // playback events never arrive (older API), this path still fires,
+        // preserving the previous behaviour rather than hanging the caption.
+        if (!audioPlaybackActiveRef.current) {
+          fadeCaption(4000);
+        }
       }
     },
-    [appendCaption, handleFunctionCall],
+    [appendCaption, fadeCaption, handleFunctionCall],
   );
 
   const connect = useCallback(async () => {
@@ -489,6 +543,8 @@ export function useCanvasRealtimeSession({
         remoteAudioRef.current = audioElement;
         peerConnection.ontrack = (event) => {
           audioElement.srcObject = event.streams[0];
+          // Surface the stream too, so the visualizer reacts to the real voice.
+          setRemoteAudioStream(event.streams[0] ?? null);
         };
       }
 
@@ -612,6 +668,7 @@ export function useCanvasRealtimeSession({
     error,
     isConnected: status === "connected" || status === "paused",
     isPaused: status === "paused",
+    remoteAudioStream,
     status,
     syncFrameContext,
     togglePause,
