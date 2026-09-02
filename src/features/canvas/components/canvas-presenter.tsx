@@ -44,6 +44,7 @@ import {
 } from "@/features/canvas/hooks/use-canvas-realtime-session";
 import { useCopilotPanel } from "@/features/canvas/hooks/use-copilot-panel";
 import type { PanelGenerateRequest } from "@/features/canvas/lib/panel-generation";
+import { useEdgeReveal } from "@/features/canvas/hooks/use-edge-reveal";
 import {
   applyCanvasAction,
   summarizeCanvas,
@@ -239,6 +240,14 @@ export function CanvasPresenter({
   }, [remoteAudioStream]);
   const [captionsOn, setCaptionsOn] = useState(true);
 
+  // Presenter chrome (header + footer + activity/live-changes pills) auto-hides
+  // when the mouse sits still, so the whole viewport is usable for teaching.
+  // Move the mouse and both reveal; hovering the top/bottom edges keeps the
+  // matching bar pinned. In publicView (embedded), we keep them always visible.
+  const edgeReveal = useEdgeReveal();
+  const topVisible = publicView ? true : edgeReveal.top;
+  const bottomVisible = publicView ? true : edgeReveal.bottom;
+
   // Give the AI sight: every time the visible frame changes — whether the
   // teacher navigated manually or the AI did — tell the model exactly what is
   // now on screen. Also fires on connect (aiConnected flips true), so the AI
@@ -325,11 +334,26 @@ export function CanvasPresenter({
     <div
       ref={presenterRef}
       className={cn(
-        "canvas-presenter relative flex min-h-screen w-full flex-col overflow-hidden bg-background text-foreground",
+        // Header/footer are now absolute overlays inside this container,
+        // so it just needs to be a full-viewport positioned box — no flex
+        // column with sticky-height children.
+        "canvas-presenter relative h-svh w-full overflow-hidden bg-background text-foreground",
         !publicView && "fixed inset-0 z-[100]",
       )}
     >
-      <header className="relative z-20 flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-3 border-b bg-background/90 px-4 py-2 backdrop-blur-xl sm:px-6">
+      <header
+        {...edgeReveal.topHoverHandlers}
+        className={cn(
+          // Fixed overlay so it floats over the presentation instead of
+          // eating the top 4rem of every frame. Slight bg translucency so
+          // the slide beneath is faintly visible — reads as a temporary
+          // control layer, not a page chrome.
+          "absolute inset-x-0 top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out sm:px-6",
+          topVisible
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-full opacity-0",
+        )}
+      >
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold sm:text-base">{title}</p>
           <p className="text-xs text-muted-foreground">
@@ -440,7 +464,14 @@ export function CanvasPresenter({
       </header>
 
       {aiActivity ? (
-        <div className="pointer-events-none absolute left-1/2 top-[4.75rem] z-30 flex max-w-[80vw] -translate-x-1/2 items-center gap-2 rounded-full border bg-card/90 px-3 py-1 text-[11px] font-medium backdrop-blur-xl">
+        <div
+          className={cn(
+            // Pinned just below the header — fades with it so nothing floats
+            // in the middle of the frame when chrome is hidden.
+            "pointer-events-none absolute left-1/2 top-[4.75rem] z-30 flex max-w-[80vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium backdrop-blur-xl transition-opacity duration-200",
+            topVisible ? "opacity-100" : "opacity-0",
+          )}
+        >
           <span
             className={cn(
               "size-1.5 shrink-0 rounded-full",
@@ -456,15 +487,21 @@ export function CanvasPresenter({
       ) : null}
 
       {hasLiveChanges ? (
-        <div className="absolute left-4 top-[4.75rem] z-30 flex items-center gap-1.5 rounded-full border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-xl">
+        <div
+          className={cn(
+            "absolute left-4 top-[4.75rem] z-30 flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-xl transition-opacity duration-200",
+            topVisible ? "opacity-100" : "opacity-0",
+          )}
+        >
           <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
           Live-only changes · not saved to canvas
         </div>
       ) : null}
 
-      <div className="flex min-h-0 flex-1">
+      {/* Fills the whole viewport now that the header/footer are overlays. */}
+      <div className="absolute inset-0 flex">
         <main
-          className="relative grid flex-1 place-items-center overflow-hidden px-3 py-5 sm:px-10 sm:py-8"
+          className="relative grid flex-1 place-items-center overflow-hidden"
           onPointerDown={(event) => {
             pointerStartRef.current = event.clientX;
           }}
@@ -503,7 +540,12 @@ export function CanvasPresenter({
           <div
             key={activeFrame.id}
             className={cn(
-              "canvas-presenter-frame relative z-10 w-full max-w-6xl animate-in fade-in duration-300",
+              // Fills the whole viewport — no width/height cap. The slide's
+              // own layout (SlideBlock in canvas-puck-config) already caps its
+              // internal content at max-w-5xl and centers it, so the block
+              // stays readable while the outer surface goes edge-to-edge and
+              // aspect ratios inside are unaffected.
+              "canvas-presenter-frame relative z-10 h-full w-full animate-in fade-in duration-300",
               direction === "forward"
                 ? "slide-in-from-right-8"
                 : "slide-in-from-left-8",
@@ -533,7 +575,15 @@ export function CanvasPresenter({
         ) : null}
       </div>
 
-      <footer className="relative z-20 flex h-12 shrink-0 items-center justify-center gap-1 border-t bg-background/80 px-4 backdrop-blur-xl">
+      <footer
+        {...edgeReveal.bottomHoverHandlers}
+        className={cn(
+          "absolute inset-x-0 bottom-0 z-30 flex h-12 items-center justify-center gap-1 border-t border-border bg-background/80 px-4 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out",
+          bottomVisible
+            ? "translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-full opacity-0",
+        )}
+      >
         {frames.map((frame) => (
           <button
             key={frame.id}
@@ -551,7 +601,14 @@ export function CanvasPresenter({
       </footer>
 
       {captionsOn && aiCaption ? (
-        <div className="pointer-events-none absolute bottom-20 left-1/2 z-30 w-[min(90%,42rem)] -translate-x-1/2 rounded-xl border bg-background/85 px-4 py-2.5 text-center text-sm leading-snug text-foreground shadow-lg backdrop-blur-xl">
+        // Captions ride just above the footer bar — fade together so the
+        // caption doesn't linger over the frame after the chrome goes.
+        <div
+          className={cn(
+            "pointer-events-none absolute bottom-20 left-1/2 z-30 w-[min(90%,42rem)] -translate-x-1/2 rounded-xl border border-border bg-background/85 px-4 py-2.5 text-center text-sm leading-snug text-foreground shadow-lg backdrop-blur-xl transition-opacity duration-200",
+            bottomVisible ? "opacity-100" : "opacity-0",
+          )}
+        >
           {aiCaption}
         </div>
       ) : null}

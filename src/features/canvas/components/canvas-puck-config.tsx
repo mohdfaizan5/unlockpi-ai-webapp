@@ -681,7 +681,7 @@ export const canvasPuckConfig: Config<CanvasComponents, CanvasRootProps> = {
     render: ({ children, title, theme, typographyScale }) => (
       <main
         aria-label={title ? `${title} frames` : "Canvas frames"}
-        className="grid min-h-full w-full content-start gap-6 bg-[var(--canvas-stage)] px-3 py-6 text-foreground transition-[background-color,color] duration-200 sm:px-4 lg:px-6"
+        className="grid min-h-full w-full content-start gap-6 bg-[var(--canvas-stage)] px-3  text-foreground transition-[background-color,color] duration-200 sm:px-4 lg:px-6"
         style={getCanvasThemeStyle(
           theme ?? DEFAULT_CANVAS_THEME,
           typographyScale ?? DEFAULT_CANVAS_TYPOGRAPHY_SCALE,
