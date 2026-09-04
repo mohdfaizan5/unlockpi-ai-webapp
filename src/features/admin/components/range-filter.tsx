@@ -29,7 +29,13 @@ export function RangeFilter({ value }: { value: string }) {
   };
 
   return (
-    <Select value={value} onValueChange={(next) => onChange(String(next))}>
+    // `items` is what lets SelectValue render the LABEL ("Last 30 days")
+    // instead of the raw stored value ("30").
+    <Select
+      items={RANGE_OPTIONS as unknown as { label: string; value: string }[]}
+      value={value}
+      onValueChange={(next) => onChange(String(next))}
+    >
       <SelectTrigger size="sm" className="w-40">
         <CalendarIcon className="size-4 text-muted-foreground" />
         <SelectValue />

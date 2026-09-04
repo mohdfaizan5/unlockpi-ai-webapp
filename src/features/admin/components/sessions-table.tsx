@@ -4,9 +4,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/features/admin/components/data-table";
+import {
+  ADMIN_AVATAR_FALLBACK_CLASS,
+  AdminDataTable,
+} from "@/features/admin/components/admin-data-table";
 import { SessionDetailDialog } from "@/features/admin/components/session-detail-dialog";
 import { formatCost, formatDate, initialsOf } from "@/features/admin/lib/format";
 import type {
@@ -17,9 +20,15 @@ import type {
 export function SessionsTable({
   sessions,
   users,
+  page,
+  pageSize,
+  total,
 }: {
   sessions: AdminRealtimeSession[];
   users: AdminUser[];
+  page: number;
+  pageSize: number;
+  total: number;
 }) {
   const userById = useMemo(
     () => new Map(users.map((user) => [user.id, user])),
@@ -33,7 +42,6 @@ export function SessionsTable({
       {
         accessorKey: "ownerId",
         header: "Tutor",
-        enableSorting: false,
         cell: ({ row }) => {
           const user = userById.get(row.original.ownerId);
           const name = user?.name ?? "Unknown";
@@ -46,7 +54,8 @@ export function SessionsTable({
               className="flex items-center gap-2.5 hover:underline"
             >
               <Avatar className="size-7 shrink-0 text-[10px]">
-                <AvatarFallback className="bg-primary/12 font-semibold text-primary">
+                <AvatarImage src={user?.avatarUrl ?? undefined} alt={name} />
+                <AvatarFallback className={ADMIN_AVATAR_FALLBACK_CLASS}>
                   {initialsOf(name)}
                 </AvatarFallback>
               </Avatar>
@@ -54,12 +63,13 @@ export function SessionsTable({
             </Link>
           );
         },
+        size: 190,
       },
       {
         accessorKey: "lessonTitle",
         header: "Lesson",
         cell: ({ row }) => (
-          <span className="truncate text-muted-foreground">
+          <span className="block truncate text-muted-foreground">
             {row.original.lessonTitle}
           </span>
         ),
@@ -68,11 +78,11 @@ export function SessionsTable({
         accessorKey: "source",
         header: "Source",
         cell: ({ row }) => (
-          <Badge variant="secondary" className="capitalize">
+          <Badge variant="outline" className="capitalize">
             {row.original.source}
           </Badge>
         ),
-        size: 100,
+        size: 110,
       },
       {
         accessorKey: "durationSeconds",
@@ -110,10 +120,12 @@ export function SessionsTable({
 
   return (
     <>
-      <DataTable
+      <AdminDataTable
         columns={columns}
         data={sessions}
-        pageSize={12}
+        page={page}
+        pageSize={pageSize}
+        total={total}
         emptyLabel="No AI sessions in this range."
         onRowClick={(session) => {
           setSelected(session);

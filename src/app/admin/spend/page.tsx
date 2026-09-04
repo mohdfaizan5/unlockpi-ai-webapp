@@ -100,7 +100,7 @@ export default async function AdminSpendPage({
       <AdminPageHeader
         title="Spend"
         icon={CoinsIcon}
-        description="Realtime classroom AI and visual generation, tracked separately."
+        // description="Realtime classroom AI and visual generation, tracked separately."
         action={<RangeFilter value={range} />}
       />
 
@@ -186,7 +186,7 @@ export default async function AdminSpendPage({
       <div className="mt-5">
         <DailySpendChart
           data={dailySeries}
-          description="Hover a bar for that day's exact spend."
+          description="Hover a bar for that day's exact spend. "
         />
       </div>
 

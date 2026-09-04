@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -62,6 +62,7 @@ export function SessionDetailDialog({
                   className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3 transition-colors hover:bg-accent"
                 >
                   <Avatar className="size-9 text-xs">
+                    <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name} />
                     <AvatarFallback className="bg-primary/12 font-semibold text-primary">
                       {initialsOf(user.name)}
                     </AvatarFallback>

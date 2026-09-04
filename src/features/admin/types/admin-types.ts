@@ -2,6 +2,8 @@ export type AdminUser = {
   id: string;
   email: string;
   name: string;
+  /** From Supabase user_metadata.avatar_url — null falls back to initials. */
+  avatarUrl: string | null;
   createdAt: string;
   lastActiveAt: string | null;
   lastSignInAt: string | null;

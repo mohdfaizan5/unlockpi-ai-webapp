@@ -9,7 +9,7 @@ import {
   ShieldCheckIcon,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DailySpendChart } from "@/features/admin/components/daily-spend-chart";
@@ -17,6 +17,11 @@ import { MetricCard } from "@/features/admin/components/metric-card";
 import { RangeFilter } from "@/features/admin/components/range-filter";
 import { SessionsTable } from "@/features/admin/components/sessions-table";
 import { getAdminDashboardData } from "@/features/admin/lib/admin-data";
+import {
+  ADMIN_PAGE_SIZE,
+  paginate,
+  resolvePage,
+} from "@/features/admin/lib/admin-pagination";
 import {
   formatCost,
   formatMinutes,
@@ -41,10 +46,11 @@ export default async function AdminUserDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; page?: string }>;
 }) {
   const { id } = await params;
-  const { range = "30" } = await searchParams;
+  const { range = "30", page: pageParam } = await searchParams;
+  const sessionPage = resolvePage(pageParam);
   const data = await getAdminDashboardData();
 
   const user = data.users.find((u) => u.id === id);
@@ -76,8 +82,12 @@ export default async function AdminUserDetailPage({
     days: resolveChartDays(range),
   });
 
+  // Charts/metrics above use the full range; the table below shows one page.
+  const pagedUserSessions = paginate(userSessions, sessionPage);
+
   const rangeLabel =
-    RANGE_OPTIONS.find((option) => option.value === range)?.label ?? "this range";
+    RANGE_OPTIONS.find((option) => option.value === range)?.label ??
+    "this range";
 
   return (
     <>
@@ -85,7 +95,7 @@ export default async function AdminUserDetailPage({
         render={<Link href="/admin/users" />}
         variant="ghost"
         size="sm"
-        className="mb-4 -ml-2 text-muted-foreground"
+        className="mb-4 -mt-8 -ml-2 text-muted-foreground"
       >
         <ArrowLeftIcon className="size-4" /> All users
       </Button>
@@ -93,6 +103,7 @@ export default async function AdminUserDetailPage({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Avatar className="size-12 text-base">
+            <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name} />
             <AvatarFallback className="bg-primary/12 font-semibold text-primary">
               {initialsOf(user.name)}
             </AvatarFallback>
@@ -111,10 +122,10 @@ export default async function AdminUserDetailPage({
         </div>
       </div>
 
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+      {/* <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         Lifetime
-      </p>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      </p> */}
+      {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={CoinsIcon}
           label="Total spend"
@@ -136,7 +147,7 @@ export default async function AdminUserDetailPage({
           label="Classroom time"
           value={formatMinutes(lifetimeStats.durationSeconds)}
         />
-      </div>
+      </div> */}
 
       <div className="mt-8 flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -144,7 +155,7 @@ export default async function AdminUserDetailPage({
         </p>
         <RangeFilter value={range} />
       </div>
-      <div className="mt-3 grid gap-4 sm:grid-cols-3">
+      <div className="mt-3 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
         <MetricCard
           icon={CoinsIcon}
           label={`Spend — ${rangeLabel.toLowerCase()}`}
@@ -161,6 +172,11 @@ export default async function AdminUserDetailPage({
           label="Generations in range"
           value={formatNumber(rangeVisualsRollup.totalGenerations)}
         />
+        <MetricCard
+          icon={Clock3Icon}
+          label="Classroom time"
+          value={formatMinutes(lifetimeStats.durationSeconds)}
+        />
       </div>
       <div className="mt-4">
         <DailySpendChart
@@ -174,7 +190,13 @@ export default async function AdminUserDetailPage({
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Session history
         </p>
-        <SessionsTable sessions={userSessions} users={data.users} />
+        <SessionsTable
+          sessions={pagedUserSessions.rows}
+          users={data.users}
+          page={sessionPage}
+          pageSize={ADMIN_PAGE_SIZE}
+          total={pagedUserSessions.total}
+        />
       </div>
     </>
   );

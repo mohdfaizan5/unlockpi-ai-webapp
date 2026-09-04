@@ -64,11 +64,11 @@ const topItems: MainItem[] = [
   //   url: "/dashboard/interview",
   //   icon: VscCommentDiscussionSparkle,
   // },
-  {
-    title: "Courses",
-    url: "/dashboard/courses",
-    icon: PenLineIcon,
-  },
+  // {
+  //   title: "Courses",
+  //   url: "/dashboard/courses",
+  //   icon: PenLineIcon,
+  // },
   {
     title: "Projects",
     url: "/dashboard/projects",

@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic"
 
 import { SectionCards } from "@/components/temp-components/section-cards"
+import { redirect } from "next/navigation"
 
 // import data from "./data.json"
 
@@ -26,6 +27,7 @@ const ChartAreaInteractive = dynamic(
 // )
 
 export default function Page() {
+  redirect("/dashboard/projects")
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

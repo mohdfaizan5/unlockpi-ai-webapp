@@ -53,6 +53,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       id: user.id,
       email: user.email ?? "No email",
       name: getUserName(user, profile?.display_name),
+      avatarUrl: getAvatarUrl(user),
       createdAt: user.created_at,
       lastActiveAt: profile?.last_active_at ?? null,
       lastSignInAt: user.last_sign_in_at ?? null,
@@ -135,6 +136,12 @@ async function listAllAuthUsers() {
   }
 
   return users;
+}
+
+/** Avatar uploaded via settings (UploadThing URL stored in user_metadata). */
+function getAvatarUrl(user: User): string | null {
+  const url = user.user_metadata?.avatar_url;
+  return typeof url === "string" && url.trim() ? url : null;
 }
 
 function getUserName(user: User, profileName?: string | null) {

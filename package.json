@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "secretlint"
   },
   "dependencies": {
     "@ai-sdk/openai": "3",
@@ -85,13 +89,17 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9.1.7",
     "lightningcss-linux-x64-gnu": "^1.32.0",
+    "lint-staged": "^17.3.0",
+    "secretlint": "^13.0.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
