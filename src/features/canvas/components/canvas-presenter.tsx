@@ -348,7 +348,7 @@ export function CanvasPresenter({
           // eating the top 4rem of every frame. Slight bg translucency so
           // the slide beneath is faintly visible — reads as a temporary
           // control layer, not a page chrome.
-          "absolute inset-x-0 top-0 z-30 flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out sm:px-6",
+          "absolute inset-x-0 top-0 z-30  flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-2 backdrop-blur-xl transition-[opacity,transform] duration-300 ease-out sm:px-6",
           topVisible
             ? "translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-full opacity-0",
@@ -356,9 +356,9 @@ export function CanvasPresenter({
       >
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold sm:text-base">{title}</p>
-          <p className="text-xs text-muted-foreground">
+          {/* <p className="text-xs text-muted-foreground">
             Frame {activeIndex + 1} of {frames.length} / {activeFrame.title}
-          </p>
+          </p> */}
         </div>
 
         {!publicView ? (
@@ -468,7 +468,7 @@ export function CanvasPresenter({
           className={cn(
             // Pinned just below the header — fades with it so nothing floats
             // in the middle of the frame when chrome is hidden.
-            "pointer-events-none absolute left-1/2 top-[4.75rem] z-30 flex max-w-[80vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium backdrop-blur-xl transition-opacity duration-200",
+            "pointer-events-none absolute  left-1/2 top-[4.75rem] z-30 flex max-w-[80vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium backdrop-blur-xl transition-opacity duration-300",
             topVisible ? "opacity-100" : "opacity-0",
           )}
         >
@@ -489,7 +489,7 @@ export function CanvasPresenter({
       {hasLiveChanges ? (
         <div
           className={cn(
-            "absolute left-4 top-[4.75rem] z-30 flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-xl transition-opacity duration-200",
+            "absolute left-4 top-[4.75rem] z-30 flex items-center gap-1.5 rounded-full border border-border bg-card/90 px-3 py-1 text-[11px] font-medium text-muted-foreground backdrop-blur-xl transition-opacity duration-300",
             topVisible ? "opacity-100" : "opacity-0",
           )}
         >
@@ -578,7 +578,7 @@ export function CanvasPresenter({
       <footer
         {...edgeReveal.bottomHoverHandlers}
         className={cn(
-          "absolute inset-x-0 bottom-0 z-30 flex h-12 items-center justify-center gap-1 border-t border-border bg-background/80 px-4 backdrop-blur-xl transition-[opacity,transform] duration-200 ease-out",
+          "absolute inset-x-0 bottom-0 z-30 flex h-12 items-center justify-center gap-1 border-t border-border bg-background/80 px-4 backdrop-blur-xl transition-[opacity,transform] duration-300 ease-out",
           bottomVisible
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-full opacity-0",
@@ -605,7 +605,7 @@ export function CanvasPresenter({
         // caption doesn't linger over the frame after the chrome goes.
         <div
           className={cn(
-            "pointer-events-none absolute bottom-20 left-1/2 z-30 w-[min(90%,42rem)] -translate-x-1/2 rounded-xl border border-border bg-background/85 px-4 py-2.5 text-center text-sm leading-snug text-foreground shadow-lg backdrop-blur-xl transition-opacity duration-200",
+            "pointer-events-none absolute bottom-20 left-1/2 z-30 w-[min(90%,42rem)] -translate-x-1/2 rounded-xl border border-border bg-background/85 px-4 py-2.5 text-center text-sm leading-snug text-foreground shadow-lg backdrop-blur-xl transition-opacity duration-300",
             bottomVisible ? "opacity-100" : "opacity-0",
           )}
         >
