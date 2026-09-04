@@ -78,7 +78,8 @@ function toBase64(input: string) {
 /**
  * Exports the current selection (or the whole scratchpad when nothing is
  * selected) to an inline SVG data URI, sized so the block can reserve the right
- * aspect ratio before the image paints.
+ * aspect ratio before the image paints. The SVG keeps the scratchpad's own
+ * background, so its strokes remain visible on every canvas theme.
  */
 async function exportSketch(
   api: ExcalidrawApi,
@@ -100,7 +101,10 @@ async function exportSketch(
 
   const svg = await exportToSvg({
     elements: elements as never,
-    appState: { ...appState, exportBackground: false } as never,
+    // A transparent SVG lets Excalidraw's default black strokes disappear on
+    // dark canvas themes. Its own background also preserves white-on-dark
+    // drawings when the scratchpad background has been changed.
+    appState: { ...appState, exportBackground: true } as never,
     files: api.getFiles() as never,
     exportPadding: 8,
   });
